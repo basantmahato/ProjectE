@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
+import { authStore } from '@/store/authStore';
 import { themeStore } from '@/store/themeStore';
 
 export const unstable_settings = {
@@ -15,6 +16,9 @@ export default function RootLayout() {
   const theme = themeStore((state) => state.theme);
   useEffect(() => {
     SplashScreen.hideAsync();
+  }, []);
+  useEffect(() => {
+    authStore.getState().hydrate();
   }, []);
 
   return (

@@ -20,6 +20,8 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { themeStore } from '@/store/themeStore';
 import { darkColors, lightColors } from '@/themes/color';
 
+import { authStore } from '@/store/authStore';
+
 const { width } = Dimensions.get('window');
 
 export default function LoginScreen() {
@@ -39,6 +41,9 @@ export default function LoginScreen() {
   const slideAnim = useRef(new Animated.Value(40)).current;
   const logoScale = useRef(new Animated.Value(0.8)).current;
   const btnScale = useRef(new Animated.Value(1)).current;
+
+  const login = authStore((state) => state.login);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   useEffect(() => {
     Animated.parallel([
@@ -174,13 +179,24 @@ export default function LoginScreen() {
                 />
               </View>
 
+              {loginError ? (
+                <Text style={styles.errorText}>{loginError}</Text>
+              ) : null}
               {/* CTA */}
               <Animated.View style={{ transform: [{ scale: btnScale }], marginTop: 24 }}>
                 <Pressable
                   style={styles.btnPressable}
                   onPressIn={handlePressIn}
                   onPressOut={handlePressOut}
-                  onPress={() => router.replace('/(tabs)')}
+                  onPress={async () => {
+                    setLoginError(null);
+                    try {
+                      await login(email, password);
+                      router.replace('/(tabs)');
+                    } catch {
+                      setLoginError('Invalid email or password');
+                    }
+                  }}
                 >
                   <LinearGradient
                     colors={[colors.primary, colors.primary]}
@@ -267,6 +283,7 @@ const styles = StyleSheet.create({
   },
   inputIcon: { fontSize: 16, marginRight: 10 },
   input: { flex: 1, fontSize: 15 },
+  errorText: { fontSize: 14, color: '#e74c3c', marginTop: 12, textAlign: 'center' },
   btnPressable: { borderRadius: 16, overflow: 'hidden' },
   btn: {
     alignItems: 'center',

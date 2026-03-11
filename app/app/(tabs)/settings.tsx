@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
 import { Avatar, Column, Row } from '@/components/settings';
+import { authStore } from '@/store/authStore';
 import { themeStore } from '@/store/themeStore';
 import { darkColors, lightColors } from '@/themes/color';
 
@@ -36,6 +37,7 @@ export default function Settings() {
       toggleTheme: state.toggleTheme,
     }))
   );
+  const logout = authStore((state) => state.logout);
   const router = useRouter();
   const { width } = useWindowDimensions();
 
@@ -137,7 +139,10 @@ export default function Settings() {
           <TouchableOpacity
             style={styles.logoutWrap}
             activeOpacity={0.7}
-            onPress={() => router.push('./(auth)')}
+            onPress={async () => {
+              await logout();
+              router.replace('/(auth)/login');
+            }}
           >
             <Text style={[styles.logoutText, { color: colors.text }]}>Logout</Text>
           </TouchableOpacity>
