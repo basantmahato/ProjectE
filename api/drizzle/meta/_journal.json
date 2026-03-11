@@ -1,0 +1,76 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1773070994635,
+      "tag": "0000_many_thunderbolts",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773072553061,
+      "tag": "0001_add_password_and_role",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773077392634,
+      "tag": "0002_absent_adam_destine",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773119777223,
+      "tag": "0003_slim_shiver_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773120368689,
+      "tag": "0004_rich_ogun",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1773125642884,
+      "tag": "0005_normal_eternals",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1773125905808,
+      "tag": "0006_rare_tarantula",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1773126459611,
+      "tag": "0007_pale_the_call",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1773126828915,
+      "tag": "0008_messy_stick",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1773162493152,
+      "tag": "0009_outstanding_longshot",
+      "breakpoints": true
+    }
+  ]
+}

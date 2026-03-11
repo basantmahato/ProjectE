@@ -1,0 +1,11 @@
+import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+
+export const subjects = pgTable("subjects", {
+  id: uuid("id").defaultRandom().primaryKey(),
+
+  name: text("name").notNull(),
+
+  examType: text("exam_type"), // JEE UPSC GATE
+
+  createdAt: timestamp("created_at").defaultNow()
+});
