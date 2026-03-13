@@ -2,6 +2,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
+  Dimensions,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -9,7 +10,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
@@ -39,7 +39,7 @@ export default function Settings() {
   );
   const logout = authStore((state) => state.logout);
   const router = useRouter();
-  const { width } = useWindowDimensions();
+  const { width } = Dimensions.get('window');
 
   const dark = theme === 'dark';
   const colors = dark ? darkColors : lightColors;

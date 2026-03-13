@@ -21,6 +21,7 @@ interface AuthStore {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   hydrate: () => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<void>;
 }
 
 export const authStore = create<AuthStore>((set) => ({
@@ -30,6 +31,13 @@ export const authStore = create<AuthStore>((set) => ({
   hydrationDone: false,
   login: async (email: string, password: string) => {
     const response = await api.post("/auth/login", { email, password });
+    const { user, access_token } = response.data;
+    await AsyncStorage.setItem(ACCESS_TOKEN_KEY, access_token);
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+    set({ isAuthenticated: true, user, accessToken: access_token });
+  },
+  register: async (email: string, password: string, name: string) => {
+    const response = await api.post("/auth/register", { email, password, name });
     const { user, access_token } = response.data;
     await AsyncStorage.setItem(ACCESS_TOKEN_KEY, access_token);
     await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));

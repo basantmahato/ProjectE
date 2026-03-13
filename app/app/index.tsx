@@ -1,5 +1,6 @@
 import { Redirect } from 'expo-router';
 import { useSyncExternalStore } from 'react';
+import { View } from 'react-native';
 
 import { authStore } from '@/store/authStore';
 
@@ -20,7 +21,7 @@ export default function Index() {
   const isAuthenticated = useIsAuthenticated();
 
   if (!hydrationDone) {
-    return null;
+    return <View style={{ flex: 1 }} />;
   }
 
   if (isAuthenticated) {

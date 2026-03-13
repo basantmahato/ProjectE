@@ -20,17 +20,25 @@ export class AuthService {
     const hashed = await bcrypt.hash(data.password, 10);
   
     try {
-      const user = await db
+      const [user] = await db
         .insert(users)
         .values({
           email: data.email,
           password: hashed,
-          name: data.name,
+          name: data.name ?? null,
           role: "user",
         })
         .returning();
+      const payload = {
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+      };
+      const { password: _, ...userWithoutPassword } = user;
       return {
         message: "User registered successfully",
+        user: userWithoutPassword,
+        access_token: this.jwtService.sign(payload),
       };
     } catch (err: unknown) {
       const isUniqueViolation =
