@@ -23,7 +23,7 @@ export function StatCard({
   trendUp = true,
 }: StatCardProps) {
   return (
-    <View style={[styles.card, { backgroundColor: accentColor + '15' }]}>
+    <View style={[styles.card, { backgroundColor: accentColor + '15', borderColor: accentColor + '25' }]}>
       <View style={styles.topRow}>
         <View style={[styles.progressCircle, { backgroundColor: accentColor + '20' }]}>
           <Text style={[styles.progressText, { color: accentColor }]}>{progressPercent}%</Text>
@@ -49,12 +49,11 @@ export function StatCard({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
-    padding: 12, // Reduced internal padding
-    borderWidth: 0, // Explicitly no border
-    // Shadows/Elevation removed to eliminate the double-border effect
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
     elevation: 0,
-    shadowOpacity: 0, 
+    shadowOpacity: 0,
   },
   topRow: {
     flexDirection: 'row',
@@ -63,14 +62,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   progressCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
   progressText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
   },
   title: {

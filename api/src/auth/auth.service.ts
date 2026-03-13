@@ -1,9 +1,11 @@
-import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { db } from "../database/db";
 import { users } from "../database/schema/user.schema";
 import { eq } from "drizzle-orm";
 import * as bcrypt from "bcrypt";
 import { JwtService } from "@nestjs/jwt";
+import { UpdateProfileDto } from "./dto/update-profile.dto";
+import { ChangePasswordDto } from "./dto/change-password.dto";
 
 @Injectable()
 export class AuthService {
@@ -83,5 +85,47 @@ export class AuthService {
       user: userWithoutPassword,
       access_token: this.jwtService.sign(payload)
     };
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    const updatePayload: Partial<{ name: string | null; email: string }> = {};
+    if (dto.name !== undefined) updatePayload.name = dto.name.trim() || null;
+    if (dto.email !== undefined) updatePayload.email = dto.email.trim();
+
+    if (Object.keys(updatePayload).length === 0) {
+      const [current] = await db.select().from(users).where(eq(users.id, userId));
+      if (!current) throw new NotFoundException("User not found");
+      const { password: _, ...userWithoutPassword } = current;
+      return { user: userWithoutPassword };
+    }
+
+    if (updatePayload.email !== undefined) {
+      const existing = await db.select().from(users).where(eq(users.email, updatePayload.email));
+      if (existing.length > 0 && existing[0].id !== userId) {
+        throw new ConflictException("Email already in use");
+      }
+    }
+
+    const [updated] = await db
+      .update(users)
+      .set(updatePayload)
+      .where(eq(users.id, userId))
+      .returning();
+
+    if (!updated) throw new NotFoundException("User not found");
+    const { password: _, ...userWithoutPassword } = updated;
+    return { user: userWithoutPassword };
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user) throw new NotFoundException("User not found");
+
+    const match = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!match) throw new UnauthorizedException("Current password is incorrect");
+
+    const hashed = await bcrypt.hash(dto.newPassword, 10);
+    await db.update(users).set({ password: hashed }).where(eq(users.id, userId));
+    return { message: "Password updated" };
   }
 }

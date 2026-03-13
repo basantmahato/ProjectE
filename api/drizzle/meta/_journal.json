@@ -71,6 +71,48 @@
       "when": 1773162493152,
       "tag": "0009_outstanding_longshot",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1773428031934,
+      "tag": "0010_tidy_risque",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1773429439622,
+      "tag": "0011_stiff_gravity",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1773430133912,
+      "tag": "0012_previous_mattie_franklin",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1773432042240,
+      "tag": "0013_sticky_nextwave",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1773432848856,
+      "tag": "0014_nice_spitfire",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1773435431435,
+      "tag": "0015_brief_karnak",
+      "breakpoints": true
     }
   ]
 }

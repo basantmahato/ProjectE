@@ -2,7 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { db } from '../database/db';
 import { testQuestions } from '../database/schema/testQuestions.schema';
 import { questionBank } from '../database/schema/questionBank.schema';
-import { eq, and } from 'drizzle-orm';
+import { questionOptions } from '../database/schema/questionOption.schema';
+import { eq, and, inArray } from 'drizzle-orm';
 
 @Injectable()
 export class TestQuestionsService {
@@ -43,6 +44,50 @@ export class TestQuestionsService {
       .innerJoin(questionBank, eq(testQuestions.questionId, questionBank.id))
       .where(eq(testQuestions.testId, testId))
       .orderBy(testQuestions.questionOrder);
+  }
+
+  async findByTestIdWithQuestionsAndOptions(testId: string) {
+    const questions = await db
+      .select({
+        id: testQuestions.id,
+        testId: testQuestions.testId,
+        questionId: questionBank.id,
+        questionOrder: testQuestions.questionOrder,
+        questionText: questionBank.questionText,
+        difficulty: questionBank.difficulty,
+        marks: questionBank.marks,
+        negativeMarks: questionBank.negativeMarks,
+        explanation: questionBank.explanation,
+      })
+      .from(testQuestions)
+      .innerJoin(questionBank, eq(testQuestions.questionId, questionBank.id))
+      .where(eq(testQuestions.testId, testId))
+      .orderBy(testQuestions.questionOrder);
+
+    if (!questions.length) {
+      return questions.map((q) => ({ ...q, options: [] }));
+    }
+
+    const questionIds = questions.map((q) => q.questionId);
+    const options = await db
+      .select()
+      .from(questionOptions)
+      .where(inArray(questionOptions.questionId, questionIds));
+
+    const optionsByQuestion = options.reduce<Record<string, typeof options>>(
+      (acc, opt) => {
+        const id = opt.questionId;
+        if (!acc[id]) acc[id] = [];
+        acc[id].push(opt);
+        return acc;
+      },
+      {},
+    );
+
+    return questions.map((q) => ({
+      ...q,
+      options: optionsByQuestion[q.questionId] ?? [],
+    }));
   }
 
   async removeFromTest(testId: string, id: string) {

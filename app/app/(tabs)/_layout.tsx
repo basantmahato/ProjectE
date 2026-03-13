@@ -48,7 +48,7 @@ export default function TabLayout() {
         options={{
           title: 'Explore',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={26} name="paperplane.fill" color={color} />
+            <IconSymbol size={26} name="safari" color={color} />
           ),
         }}
       />

@@ -15,4 +15,10 @@ export class CreateTestDto {
 
   @ApiPropertyOptional({ description: 'Whether test is published', example: false })
   isPublished?: boolean;
+
+  @ApiPropertyOptional({ description: 'When the test becomes available (ISO 8601)', example: '2026-03-20T09:00:00.000Z' })
+  scheduledAt?: string;
+
+  @ApiPropertyOptional({ description: 'When the test stops being available (ISO 8601)', example: '2026-03-20T11:00:00.000Z' })
+  expiresAt?: string;
 }

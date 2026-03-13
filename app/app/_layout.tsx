@@ -30,6 +30,23 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="test/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="attempt/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="upcoming-tests" options={{ headerShown: false }} />
+        <Stack.Screen name="recent-tests" options={{ headerShown: false }} />
+        <Stack.Screen name="mock-tests" options={{ headerShown: false }} />
+        <Stack.Screen name="mock-test/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="sample-papers" options={{ headerShown: false }} />
+        <Stack.Screen name="sample-paper/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="interview-prep" options={{ headerShown: false }} />
+        <Stack.Screen name="interview-prep/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="blog" options={{ headerShown: false }} />
+        <Stack.Screen name="blog/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="performance" options={{ headerShown: false }} />
+        <Stack.Screen name="profile-settings" options={{ headerShown: false }} />
+        <Stack.Screen name="billing" options={{ headerShown: false }} />
+        <Stack.Screen name="rank" options={{ headerShown: false }} />
+        <Stack.Screen name="bookmarked-blogs" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{  presentation: 'modal', title: 'Modal' }} />
         <Stack.Screen name="notifications" options={{ presentation: 'modal', title: 'Notifications' }} />
       </Stack>

@@ -1,6 +1,6 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dimensions,
   ScrollView,
@@ -15,11 +15,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
 import { Avatar, Column, Row } from '@/components/settings';
+import api from '@/lib/axios';
 import { authStore } from '@/store/authStore';
 import { themeStore } from '@/store/themeStore';
 import { darkColors, lightColors } from '@/themes/color';
-
-const DISPLAY_NAME = 'User';
 const CONTENT_MAX_WIDTH = 500;
 
 type SettingsRowItem = {
@@ -37,23 +36,42 @@ export default function Settings() {
       toggleTheme: state.toggleTheme,
     }))
   );
-  const logout = authStore((state) => state.logout);
+  const { user, logout } = authStore(
+    useShallow((state) => ({ user: state.user, logout: state.logout }))
+  );
   const router = useRouter();
   const { width } = Dimensions.get('window');
 
   const dark = theme === 'dark';
   const colors = dark ? darkColors : lightColors;
 
+  const displayName = user?.name?.trim() || user?.email?.split('@')[0] || 'User';
+
+  const [userRank, setUserRank] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get<{ id: string; rank: number }[]>('/dashbaord/leaderboard')
+      .then((res) => {
+        if (cancelled) return;
+        const list = Array.isArray(res.data) ? res.data : [];
+        const myEntry = user?.id ? list.find((e) => e.id === user.id) : null;
+        setUserRank(myEntry?.rank ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setUserRank(null);
+      });
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
   const horizontalPadding = Math.min(Math.max(width * 0.05, 16), 24);
   const contentPadding = { paddingHorizontal: horizontalPadding };
 
   const settingsRows: SettingsRowItem[] = [
     { id: 'appearance', label: 'Appearance', icon: 'dark-mode', showSwitch: true, showChevron: false },
-    { id: 'datasaver', label: 'Datasaver', icon: 'data-usage', showChevron: true },
-    { id: 'watch-history', label: 'Watch history', icon: 'history', showChevron: true },
     { id: 'notifications', label: 'Notifications', icon: 'notifications-none', showChevron: true },
     { id: 'bookmarks', label: 'Manage bookmarks', icon: 'bookmark-border', showChevron: true },
-    { id: 'accessibility', label: 'Accessibility', icon: 'accessibility-new', showChevron: true },
   ];
 
   return (
@@ -71,32 +89,37 @@ export default function Settings() {
             <Text style={[styles.headerTitle, { color: colors.text }]}>Profile</Text>
           </View>
 
-          {/* Single centered avatar */}
+          {/* Single centered avatar with rank tag */}
           <Avatar
-            initial={DISPLAY_NAME.charAt(0)}
-            name={DISPLAY_NAME}
+            initial={displayName.charAt(0)}
+            name={displayName}
             colors={colors}
           />
+          <TouchableOpacity
+            style={[styles.rankTag, { backgroundColor: colors.primary + '22' }]}
+            activeOpacity={0.7}
+            onPress={() => router.push('/rank')}
+          >
+            <MaterialIcons name="leaderboard" size={14} color={colors.primary} />
+            <Text style={[styles.rankTagText, { color: colors.primary }]}>
+              {userRank != null ? `Rank #${userRank}` : 'View leaderboard'}
+            </Text>
+          </TouchableOpacity>
 
           {/* Quick actions row */}
           <Row gap={12} style={styles.quickActionsRow}>
             <TouchableOpacity
               style={[styles.quickActionBtn, { backgroundColor: colors.card }]}
               activeOpacity={0.7}
+              onPress={() => router.push('/billing')}
             >
-              <MaterialIcons name="download" size={24} color={colors.text} />
-              <Text style={[styles.quickActionLabel, { color: colors.text }]}>Downloads</Text>
+              <MaterialIcons name="payment" size={24} color={colors.text} />
+              <Text style={[styles.quickActionLabel, { color: colors.text }]}>Billing</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.quickActionBtn, { backgroundColor: colors.card }]}
               activeOpacity={0.7}
-            >
-              <MaterialIcons name="star-outline" size={24} color={colors.text} />
-              <Text style={[styles.quickActionLabel, { color: colors.text }]}>Watchlist</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.quickActionBtn, { backgroundColor: colors.card }]}
-              activeOpacity={0.7}
+              onPress={() => router.push('/profile-settings')}
             >
               <MaterialIcons name="person-outline" size={24} color={colors.text} />
               <Text style={[styles.quickActionLabel, { color: colors.text }]}>Profile</Text>
@@ -115,6 +138,10 @@ export default function Settings() {
                 ]}
                 activeOpacity={0.7}
                 disabled={item.showSwitch}
+                onPress={() => {
+                  if (item.id === 'bookmarks') router.push('/bookmarked-blogs');
+                  if (item.id === 'notifications') router.push('/notifications');
+                }}
               >
                 <Row gap={14} style={styles.settingsRow}>
                   <MaterialIcons name={item.icon} size={22} color={colors.text} />
@@ -176,6 +203,20 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     letterSpacing: -0.5,
+  },
+  rankTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginBottom: 24,
+  },
+  rankTagText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   quickActionsRow: {
     marginBottom: 24,

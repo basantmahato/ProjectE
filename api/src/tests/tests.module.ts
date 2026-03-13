@@ -5,7 +5,8 @@ import { TestsService } from './tests.service';
 import { TestQuestionsService } from './test-questions.service';
 
 @Module({
-  controllers: [TestsController, TestsPublicController],
+  controllers: [TestsPublicController, TestsController],
   providers: [TestsService, TestQuestionsService],
+  exports: [TestsService, TestQuestionsService],
 })
 export class TestsModule {}

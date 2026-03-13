@@ -15,6 +15,7 @@ export interface AchievementItem {
   label: string;
   icon: 'star' | 'code' | 'emoji-events' | 'workspace-premium';
   accentColor: string; // from theme or custom
+  unlocked?: boolean; // when false, show as locked (muted)
 }
 
 export interface ActivityItem {

@@ -13,13 +13,13 @@ const CARD_PADDING_V = 20;
 
 type ProgressOverviewCardProps = {
   colors: ThemeColors;
-  attendancePercent?: number;
+  accuracyPercent?: number;
   points?: number;
 };
 
 export function ProgressOverviewCard({
   colors,
-  attendancePercent = 85,
+  accuracyPercent = 0,
   points = 750,
 }: ProgressOverviewCardProps) {
   const { width } = useWindowDimensions();
@@ -45,10 +45,10 @@ export function ProgressOverviewCard({
       <View style={styles.metricsRow}>
         <View style={styles.metricBlock}>
           <Text style={[styles.value, { color: colors.text }]}>
-            {attendancePercent}%
+            {accuracyPercent}%
           </Text>
           <Text style={[styles.label, { color: colors.subText }]}>
-            Attendance
+            Accuracy
           </Text>
         </View>
         <View style={[styles.separator, { backgroundColor: colors.border }]} />

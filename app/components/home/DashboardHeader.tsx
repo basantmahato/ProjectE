@@ -3,22 +3,34 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { ThemeColors } from './useColors';
-import { SearchBar } from './SearchBar';
 
 type DashboardHeaderProps = {
   colors: ThemeColors;
   userName?: string;
+  unreadCount?: number;
+  /** When provided, shown instead of greeting (e.g. "Practice Arena") */
+  title?: string;
+  /** When provided with title, shown as subtitle (e.g. "Select a category to begin your prep") */
+  subtitle?: string;
 };
 
-export function DashboardHeader({ colors, userName = 'Jakes' }: DashboardHeaderProps) {
+export function DashboardHeader({
+  colors,
+  userName = 'User',
+  unreadCount = 0,
+  title: customTitle,
+  subtitle: customSubtitle,
+}: DashboardHeaderProps) {
   const router = useRouter();
+  const title = customTitle ?? `Hi, ${userName}!`;
+  const subtitle = customSubtitle ?? 'Welcome back';
 
   return (
     <View style={[styles.container, { backgroundColor: colors.primary }]}>
       <View style={styles.topRow}>
         <View style={styles.greetingBlock}>
-          <Text style={styles.title}>Hi, {userName}!</Text>
-          <Text style={styles.subtitle}>Welcome Back!</Text>
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.subtitle}>{subtitle}</Text>
         </View>
         <TouchableOpacity
           style={[styles.bellWrap, { backgroundColor: 'rgba(255,255,255,0.2)' }]}
@@ -26,11 +38,10 @@ export function DashboardHeader({ colors, userName = 'Jakes' }: DashboardHeaderP
           onPress={() => router.push('/notifications')}
         >
           <MaterialIcons name="notifications" size={22} color="#fff" />
-          <View style={[styles.badge, { backgroundColor: colors.danger }]} />
+          {unreadCount > 0 ? (
+            <View style={[styles.badge, { backgroundColor: colors.danger }]} />
+          ) : null}
         </TouchableOpacity>
-      </View>
-      <View style={styles.searchWrap}>
-        <SearchBar colors={{ ...colors, card: 'rgba(255,255,255,0.95)' }} />
       </View>
     </View>
   );
@@ -53,7 +64,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: 20,
   },
   greetingBlock: {},
   title: {
@@ -81,8 +91,5 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-  },
-  searchWrap: {
-    marginHorizontal: -4,
   },
 });

@@ -1,24 +1,66 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
-  SafeAreaView,
+  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
-import { themeStore } from '@/store/themeStore';
-import { darkColors, lightColors } from '@/themes/color';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { useShallow } from 'zustand/react/shallow';
 
-const TEST_CATEGORIES = [
-  { id: '1', title: 'Recent Tests', icon: '🕒', count: '12 Available', color: '#6366f1' },
-  { id: '2', title: 'Upcoming', icon: '📅', count: '3 Scheduled', color: '#10b981' },
-  { id: '3', title: 'Mock Tests', icon: '📝', count: '50+ Sets', color: '#f59e0b' },
-  { id: '4', title: 'Sample Papers', icon: '📄', count: '24 Papers', color: '#3b82f6' },
-  { id: '5', title: 'Interview Prep', icon: '💼', count: '15 Modules', color: '#8b5cf6' },
-  { id: '6', title: 'Performance', icon: '📊', count: 'View Stats', color: '#ec4899' },
+import { DashboardHeader } from '@/components/home';
+import api from '@/lib/axios';
+import { themeStore } from '@/store/themeStore';
+import { darkColors, lightColors } from '@/themes/color';
+
+interface PublishedTest {
+  id: string;
+  title: string;
+  description: string | null;
+  durationMinutes: number;
+  totalMarks: number;
+  isPublished: boolean;
+  scheduledAt: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+}
+
+interface TestAttempt {
+  id: string;
+  testId: string;
+  startedAt: string;
+  submittedAt: string | null;
+  score: number | null;
+}
+
+const TEST_CATEGORIES: Array<{
+  id: string;
+  title: string;
+  icon: string;
+  count: string;
+  color: string;
+  route?: string;
+}> = [
+  { id: '1', title: 'Upcoming', icon: '📅', count: 'Scheduled', color: '#10b981', route: '/upcoming-tests' },
+  { id: '2', title: 'Recent Tests', icon: '🕐', count: 'Attempted', color: '#6366f1', route: '/recent-tests' },
+  { id: '3', title: 'Mock Tests', icon: '📝', count: 'Practice', color: '#f59e0b', route: '/mock-tests' },
+  { id: '4', title: 'Sample Papers', icon: '📄', count: 'Read', color: '#3b82f6', route: '/sample-papers' },
+  { id: '5', title: 'Interview Prep', icon: '💼', count: 'Topic wise', color: '#8b5cf6', route: '/interview-prep' },
+  { id: '6', title: 'Performance', icon: '📊', count: 'View Stats', color: '#ec4899', route: '/performance' },
+];
+
+const ACCENT_COLORS = [
+  '#6366f1',
+  '#10b981',
+  '#f59e0b',
+  '#3b82f6',
+  '#8b5cf6',
+  '#ec4899',
 ];
 
 const TestScreen = () => {
@@ -26,8 +68,45 @@ const TestScreen = () => {
   const dark = theme === 'dark';
   const colors = dark ? darkColors : lightColors;
 
-  const renderItem = ({ item }: { item: typeof TEST_CATEGORIES[number] }) => (
-    <TouchableOpacity style={[styles.card, { backgroundColor: colors.card }]}>
+  const [activeTests, setActiveTests] = useState<PublishedTest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [testsError, setTestsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      api.get<PublishedTest[]>('/tests/published'),
+      api.get<TestAttempt[]>('/attempts'),
+    ])
+      .then(([testsRes, attemptsRes]) => {
+        const allTests = testsRes.data;
+        const attempts = attemptsRes.data;
+
+        const attemptByTestId = new Map<string, TestAttempt>();
+        for (const attempt of attempts) {
+          const existing = attemptByTestId.get(attempt.testId);
+          if (!existing || new Date(attempt.startedAt) > new Date(existing.startedAt)) {
+            attemptByTestId.set(attempt.testId, attempt);
+          }
+        }
+
+        const notAttempted = allTests.filter((test) => !attemptByTestId.has(test.id));
+        setActiveTests(notAttempted);
+        setTestsError(null);
+      })
+      .catch(() => {
+        setActiveTests([]);
+        setTestsError('Could not load tests. Check your connection.');
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const renderCategoryItem = ({ item }: { item: typeof TEST_CATEGORIES[number] }) => (
+    <TouchableOpacity
+      style={[styles.card, { backgroundColor: colors.card }]}
+      onPress={() => { if (item.route) router.push(item.route); }}
+      activeOpacity={item.route ? 0.7 : 1}
+      disabled={!item.route}
+    >
       <View style={[styles.iconContainer, { backgroundColor: item.color + '20' }]}>
         <Text style={styles.iconText}>{item.icon}</Text>
       </View>
@@ -36,24 +115,96 @@ const TestScreen = () => {
     </TouchableOpacity>
   );
 
+  const renderActiveTestsSection = () => (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Active Tests</Text>
+        {!loading && !testsError && (
+          <View style={[styles.sectionBadge, { backgroundColor: colors.primary + '20' }]}>
+            <Text style={[styles.sectionBadgeText, { color: colors.primary }]}>
+              {activeTests.length} available
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {loading ? (
+        <ActivityIndicator color={colors.primary} style={styles.loader} />
+      ) : testsError ? (
+        <View style={[styles.emptyState, { backgroundColor: colors.card }]}>
+          <Text style={styles.emptyIcon}>⚠️</Text>
+          <Text style={[styles.emptyText, { color: colors.subText }]}>{testsError}</Text>
+        </View>
+      ) : activeTests.length === 0 ? (
+        <View style={[styles.emptyState, { backgroundColor: colors.card }]}>
+          <Text style={styles.emptyIcon}>📭</Text>
+          <Text style={[styles.emptyText, { color: colors.subText }]}>No active tests right now</Text>
+        </View>
+      ) : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.horizontalScroll}
+        >
+          {activeTests.map((test, index) => {
+            const accent = ACCENT_COLORS[index % ACCENT_COLORS.length];
+            return (
+              <TouchableOpacity
+                key={test.id}
+                style={[styles.activeTestCard, { backgroundColor: colors.card }]}
+                onPress={() => router.push(`/test/${test.id}`)}
+                activeOpacity={0.75}
+              >
+                <View style={[styles.activeTestAccent, { backgroundColor: accent }]} />
+                <View style={styles.activeTestContent}>
+                  <Text style={[styles.activeTestTitle, { color: colors.text }]} numberOfLines={2}>
+                    {test.title}
+                  </Text>
+                  <View style={styles.metaRow}>
+                    <View style={[styles.metaPill, { backgroundColor: accent + '18' }]}>
+                      <Text style={[styles.metaPillText, { color: accent }]}>
+                        {test.durationMinutes} min
+                      </Text>
+                    </View>
+                    <View style={[styles.metaPill, { backgroundColor: accent + '18' }]}>
+                      <Text style={[styles.metaPillText, { color: accent }]}>
+                        {test.totalMarks} marks
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.ctaText, { color: accent }]}>Attempt now →</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
+    </View>
+  );
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
-      <View style={styles.header}>
-        <Text style={[styles.greeting, { color: colors.text }]}>Practice Arena</Text>
-        <Text style={[styles.subGreeting, { color: colors.subText }]}>
-          Select a category to begin your prep
-        </Text>
-      </View>
-
+      <DashboardHeader
+        colors={colors}
+        unreadCount={0}
+        title="Practice Arena"
+        subtitle="Select a category to begin your prep"
+      />
       <FlatList
         data={TEST_CATEGORIES}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
+        renderItem={renderCategoryItem}
+        keyExtractor={(item) => item.id}
         numColumns={2}
         contentContainerStyle={styles.grid}
         columnWrapperStyle={styles.row}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <>
+            {renderActiveTestsSection()}
+            <Text style={[styles.categoriesLabel, { color: colors.subText }]}>Browse Categories</Text>
+          </>
+        }
       />
     </SafeAreaView>
   );
@@ -63,18 +214,100 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
+  section: {
+    paddingTop: 20,
+    paddingBottom: 8,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
+    marginBottom: 14,
+    gap: 10,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  sectionBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 20,
+  },
+  sectionBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  loader: {
+    marginVertical: 20,
+  },
+  emptyState: {
+    marginHorizontal: 20,
+    borderRadius: 16,
     paddingVertical: 24,
+    alignItems: 'center',
   },
-  greeting: {
+  emptyIcon: {
     fontSize: 28,
-    fontWeight: '800',
-    letterSpacing: -0.5,
+    marginBottom: 8,
   },
-  subGreeting: {
-    fontSize: 16,
-    marginTop: 4,
+  emptyText: {
+    fontSize: 14,
+  },
+  horizontalScroll: {
+    paddingHorizontal: 20,
+    gap: 14,
+  },
+  activeTestCard: {
+    width: 200,
+    borderRadius: 18,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  activeTestAccent: {
+    height: 5,
+    width: '100%',
+  },
+  activeTestContent: {
+    padding: 16,
+  },
+  activeTestTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 12,
+    lineHeight: 21,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 14,
+    flexWrap: 'wrap',
+  },
+  metaPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  metaPillText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  ctaText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  categoriesLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 10,
   },
   grid: {
     paddingHorizontal: 12,
@@ -88,12 +321,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
-    // iOS Shadow
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
-    // Android Shadow
     elevation: 3,
   },
   iconContainer: {

@@ -27,18 +27,20 @@ const DEFAULT_ITEMS: QuickActionItem[] = [
 
 export function QuickActionsSection({ colors, items = DEFAULT_ITEMS }: QuickActionsSectionProps) {
   const router = useRouter();
+  const isTwoColumn = items.length <= 2;
 
   return (
     <View style={styles.container}>
       <Text style={[styles.sectionTitle, { color: colors.text }]}>
-        Quick actions
+        Explore
       </Text>
-      <View style={styles.grid}>
+      <View style={[styles.grid, isTwoColumn && styles.gridTwo]}>
         {items.map((item, index) => (
           <TouchableOpacity
             key={index}
             style={[
               styles.card,
+              isTwoColumn && styles.cardLarge,
               {
                 backgroundColor: colors.card,
                 borderColor: colors.border,
@@ -51,7 +53,7 @@ export function QuickActionsSection({ colors, items = DEFAULT_ITEMS }: QuickActi
               <View style={[styles.iconWrap, { backgroundColor: colors.primary + '20' }]}>
                 <MaterialIcons
                   name={item.icon}
-                  size={22}
+                  size={isTwoColumn ? 26 : 22}
                   color={colors.primary}
                 />
               </View>
@@ -71,9 +73,9 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 14,
     letterSpacing: -0.3,
   },
   grid: {
@@ -81,29 +83,40 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 12,
   },
+  gridTwo: {
+    gap: 14,
+  },
   card: {
     minWidth: 140,
     flex: 1,
     maxWidth: '48%',
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 16,
     borderWidth: StyleSheet.hairlineWidth,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
     elevation: 2,
   },
+  cardLarge: {
+    flex: 1,
+    minWidth: 0,
+    maxWidth: undefined,
+    minHeight: 100,
+    paddingVertical: 20,
+    justifyContent: 'center',
+  },
   iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   cardLabel: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
   },
 });

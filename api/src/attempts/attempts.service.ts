@@ -11,7 +11,8 @@ import { testQuestions } from '../database/schema/testQuestions.schema';
 import { questionBank } from '../database/schema/questionBank.schema';
 import { questionOptions } from '../database/schema/questionOption.schema';
 import { tests } from '../database/schema/test.schema';
-import { eq, and, inArray } from 'drizzle-orm';
+import { users } from '../database/schema/user.schema';
+import { eq, and, inArray, sql } from 'drizzle-orm';
 
 @Injectable()
 export class AttemptsService {
@@ -187,6 +188,14 @@ export class AttemptsService {
       .set({ submittedAt: new Date(), score })
       .where(eq(testAttempts.id, attemptId))
       .returning();
+
+    // Add earned points to user's total (mock tests and active/scheduled tests both use this flow)
+    await db
+      .update(users)
+      .set({
+        totalMarks: sql`COALESCE(${users.totalMarks}, 0) + ${score}`,
+      })
+      .where(eq(users.id, userId));
 
     return updated;
   }

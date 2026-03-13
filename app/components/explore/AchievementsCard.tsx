@@ -43,28 +43,36 @@ export function AchievementsCard({ colors, achievements }: AchievementsCardProps
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.achievementsRow}
       >
-        {achievements.map((item) => (
-          <View key={item.id} style={styles.achievementItem}>
-            <View
-              style={[
-                styles.iconWrap,
-                { backgroundColor: item.accentColor + '22' },
-              ]}
-            >
-              <MaterialIcons
-                name={item.icon as any}
-                size={26}
-                color={item.accentColor}
-              />
+        {achievements.map((item) => {
+          const unlocked = item.unlocked !== false;
+          const iconColor = unlocked ? item.accentColor : colors.subText;
+          const wrapBg = unlocked ? item.accentColor + '22' : colors.border + '44';
+          return (
+            <View key={item.id} style={[styles.achievementItem, !unlocked && styles.achievementItemLocked]}>
+              <View
+                style={[
+                  styles.iconWrap,
+                  { backgroundColor: wrapBg },
+                ]}
+              >
+                <MaterialIcons
+                  name={item.icon as any}
+                  size={26}
+                  color={iconColor}
+                />
+              </View>
+              <Text
+                style={[
+                  styles.achievementLabel,
+                  { color: unlocked ? colors.text : colors.subText },
+                ]}
+                numberOfLines={2}
+              >
+                {item.label}
+              </Text>
             </View>
-            <Text
-              style={[styles.achievementLabel, { color: colors.text }]}
-              numberOfLines={2}
-            >
-              {item.label}
-            </Text>
-          </View>
-        ))}
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -93,6 +101,9 @@ const styles = StyleSheet.create({
   achievementItem: {
     alignItems: 'center',
     minWidth: 80,
+  },
+  achievementItemLocked: {
+    opacity: 0.65,
   },
   iconWrap: {
     width: ICON_WRAP_SIZE,

@@ -22,9 +22,10 @@ interface AuthStore {
   logout: () => Promise<void>;
   hydrate: () => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
+  updateUser: (updates: Partial<Pick<User, 'name' | 'email'>>) => Promise<void>;
 }
 
-export const authStore = create<AuthStore>((set) => ({
+export const authStore = create<AuthStore>((set, get) => ({
   isAuthenticated: false,
   user: null,
   accessToken: null,
@@ -61,5 +62,16 @@ export const authStore = create<AuthStore>((set) => ({
     } else {
       set({ isAuthenticated: false, user: null, accessToken: null, hydrationDone: true });
     }
+  },
+  updateUser: async (updates) => {
+    const { user } = get();
+    if (!user) return;
+    const payload: { name?: string; email?: string } = {};
+    if (updates.name !== undefined) payload.name = updates.name;
+    if (updates.email !== undefined) payload.email = updates.email;
+    const response = await api.patch<{ user: User }>("/auth/profile", payload);
+    const updated = response.data?.user ?? { ...user, ...updates };
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(updated));
+    set({ user: updated });
   },
 }));

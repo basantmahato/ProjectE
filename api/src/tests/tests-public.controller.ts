@@ -14,6 +14,11 @@ export class TestsPublicController {
     return this.testsService.findPublished();
   }
 
+  @Get('upcoming')
+  findUpcoming() {
+    return this.testsService.findUpcoming();
+  }
+
   @Get('published/:id')
   findOnePublished(@Param('id') id: string) {
     return this.testsService.findOnePublished(id);
