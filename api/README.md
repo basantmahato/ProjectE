@@ -44,6 +44,21 @@ $ pnpm run start:dev
 $ pnpm run start:prod
 ```
 
+## Plans and feature locking
+
+User plans (`free`, `basic`, `premium`) control access to features:
+
+| Plan    | Interview Prep | Regular tests | Mock tests   | Sample papers   |
+|---------|----------------|---------------|--------------|-----------------|
+| Free / guest | Yes (no login) | 2 per day | 10 per month | 10 per month    |
+| Basic   | Yes            | Unlimited     | Unlimited    | Unlimited       |
+| Premium | Yes            | Unlimited     | Unlimited    | Unlimited       |
+
+- **Interview Prep** (`GET /interview-prep/list`, `GET /interview-prep/read/:id`): available to **all** (no login required, free and paid). Optional JWT; no plan gate.
+- **Attempts** (`POST /attempts`): Free users are limited to **2 regular (scheduled) tests per calendar day** and **10 mock tests per calendar month**. Exceeding returns `403` with `code: "PLAN_UPGRADE_REQUIRED"`.
+- **Sample papers** (`GET /sample-papers/read/:paperId`): Free users and **guests** (no login) may view up to **10 distinct sample papers per calendar month**. Logged-in users are tracked by `userId`; guests must send `X-Device-ID` header and are tracked by that. Exceeding returns `403` with `code: "PLAN_UPGRADE_REQUIRED"`.
+- Plan is stored on the user record and returned in auth responses (login, register, profile). Use the billing flow to upgrade (Razorpay).
+
 ## Run tests
 
 ```bash

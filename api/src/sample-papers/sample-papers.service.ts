@@ -1,11 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { db } from '../database/db';
 import { samplePapers } from '../database/schema/samplePaper.schema';
+import { samplePaperViews } from '../database/schema/samplePaperView.schema';
 import { samplePaperSubjects } from '../database/schema/samplePaperSubject.schema';
 import { samplePaperTopics } from '../database/schema/samplePaperTopic.schema';
 import { samplePaperQuestions } from '../database/schema/samplePaperQuestion.schema';
 import { samplePaperQuestionOptions } from '../database/schema/samplePaperQuestionOption.schema';
-import { eq, asc } from 'drizzle-orm';
+import { users } from '../database/schema/user.schema';
+import { PLAN_FEATURES, type PlanId } from '../billing/plan-features';
+import { eq, asc, and, sql } from 'drizzle-orm';
 import { CreateSamplePaperDto } from './dto/create-sample-paper.dto';
 import { UpdateSamplePaperDto } from './dto/update-sample-paper.dto';
 import { CreateSamplePaperSubjectDto } from './dto/create-sample-paper-subject.dto';
@@ -291,7 +299,7 @@ export class SamplePapersService {
     return { message: 'Option deleted successfully' };
   }
 
-  // --- Public: get full paper tree for reading ---
+  // --- Public: get full paper tree for reading (no plan limit) ---
   async findPaperWithFullTree(paperId: string) {
     const paper = await this.findOnePaper(paperId);
     const subjects = await this.findSubjectsByPaperId(paperId);
@@ -314,5 +322,82 @@ export class SamplePapersService {
       }),
     );
     return { ...paper, subjects: subjectsWithTree };
+  }
+
+  /** Public: get full paper tree with free-tier limit. Supports logged-in user or guest (deviceId). */
+  async findPaperWithFullTreeForUserOrGuest(
+    paperId: string,
+    userId: string | null,
+    deviceId: string | null,
+  ) {
+    const FREE_TIER_SAMPLE_PAPERS = 10;
+    const monthStart = sql`date_trunc('month', now())`;
+    const monthEnd = sql`date_trunc('month', now()) + interval '1 month'`;
+
+    if (userId) {
+      const [user] = await db
+        .select({ plan: users.plan })
+        .from(users)
+        .where(eq(users.id, userId));
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      const plan = user.plan as PlanId;
+      const maxSamplePapers = PLAN_FEATURES[plan].maxSamplePapersPerMonth;
+
+      if (maxSamplePapers >= 0) {
+        const viewsThisMonth = await db
+          .selectDistinct({ samplePaperId: samplePaperViews.samplePaperId })
+          .from(samplePaperViews)
+          .where(
+            and(
+              eq(samplePaperViews.userId, userId),
+              sql`${samplePaperViews.viewedAt} >= ${monthStart}`,
+              sql`${samplePaperViews.viewedAt} < ${monthEnd}`,
+            ),
+          );
+        const distinctCount = viewsThisMonth.length;
+        const alreadyViewedThisMonth = viewsThisMonth.some((v) => v.samplePaperId === paperId);
+        if (distinctCount >= maxSamplePapers && !alreadyViewedThisMonth) {
+          throw new ForbiddenException({
+            message: 'Free plan limited to 10 sample papers per month. Upgrade to Basic for more.',
+            code: 'PLAN_UPGRADE_REQUIRED',
+          });
+        }
+        await db.insert(samplePaperViews).values({
+          userId,
+          samplePaperId: paperId,
+        });
+      }
+    } else if (deviceId) {
+      const viewsThisMonth = await db
+        .selectDistinct({ samplePaperId: samplePaperViews.samplePaperId })
+        .from(samplePaperViews)
+        .where(
+          and(
+            eq(samplePaperViews.deviceId, deviceId),
+            sql`${samplePaperViews.viewedAt} >= ${monthStart}`,
+            sql`${samplePaperViews.viewedAt} < ${monthEnd}`,
+          ),
+        );
+      const distinctCount = viewsThisMonth.length;
+      const alreadyViewedThisMonth = viewsThisMonth.some((v) => v.samplePaperId === paperId);
+      if (distinctCount >= FREE_TIER_SAMPLE_PAPERS && !alreadyViewedThisMonth) {
+        throw new ForbiddenException({
+          message: 'Free tier limited to 10 sample papers per month. Sign in or upgrade for more.',
+          code: 'PLAN_UPGRADE_REQUIRED',
+        });
+      }
+      await db.insert(samplePaperViews).values({
+        deviceId,
+        samplePaperId: paperId,
+      });
+    } else {
+      throw new BadRequestException(
+        'Provide Authorization header (logged-in) or X-Device-ID header (guest) to view sample papers.',
+      );
+    }
+
+    return this.findPaperWithFullTree(paperId);
   }
 }

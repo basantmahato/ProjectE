@@ -14,6 +14,7 @@ import { AttemptsModule } from './attempts/attempts.module';
 import { SamplePapersModule } from './sample-papers/sample-papers.module';
 import { InterviewPrepModule } from './interview-prep/interview-prep.module';
 import { BlogModule } from './blog/blog.module';
+import { BillingModule } from './billing/billing.module';
 
 @Module({
   controllers: [AppController],
@@ -21,6 +22,7 @@ import { BlogModule } from './blog/blog.module';
   imports: [
     UsersModule,
     AuthModule,
+    BillingModule,
     DashbaordModule,
     SubjectsModule,
     TopicsModule,

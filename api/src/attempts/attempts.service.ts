@@ -13,27 +13,116 @@ import { questionOptions } from '../database/schema/questionOption.schema';
 import { tests } from '../database/schema/test.schema';
 import { users } from '../database/schema/user.schema';
 import { eq, and, inArray, sql } from 'drizzle-orm';
+import { PLAN_FEATURES, type PlanId } from '../billing/plan-features';
 
 @Injectable()
 export class AttemptsService {
-  async startAttempt(userId: string, testId: string) {
-    const test = await db.select().from(tests).where(eq(tests.id, testId));
-    if (!test.length) {
+  async startAttempt(
+    userId: string | null,
+    deviceId: string | null,
+    testId: string,
+  ) {
+    if (!userId && !deviceId) {
+      throw new BadRequestException(
+        'Provide userId (logged-in) or deviceId (guest) to start an attempt.',
+      );
+    }
+
+    let plan: PlanId;
+    if (userId) {
+      const [user] = await db
+        .select({ plan: users.plan })
+        .from(users)
+        .where(eq(users.id, userId));
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      plan = user.plan as PlanId;
+    } else {
+      plan = 'free';
+    }
+
+    const [test] = await db.select().from(tests).where(eq(tests.id, testId));
+    if (!test) {
       throw new NotFoundException('Test not found');
     }
-    if (!test[0].isPublished) {
+    if (!test.isPublished) {
       throw new BadRequestException('Test is not published');
+    }
+
+    const identityCondition = userId
+      ? eq(testAttempts.userId, userId)
+      : eq(testAttempts.deviceId, deviceId!);
+
+    if (test.isMock) {
+      const maxMock = PLAN_FEATURES[plan].maxMockAttemptsPerMonth;
+      if (maxMock >= 0) {
+        const monthStart = sql`date_trunc('month', now())`;
+        const monthEnd = sql`date_trunc('month', now()) + interval '1 month'`;
+        const [countResult] = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(testAttempts)
+          .innerJoin(tests, eq(testAttempts.testId, tests.id))
+          .where(
+            and(
+              identityCondition,
+              eq(tests.isMock, true),
+              sql`${testAttempts.startedAt} >= ${monthStart}`,
+              sql`${testAttempts.startedAt} < ${monthEnd}`,
+            ),
+          );
+        const count = countResult?.count ?? 0;
+        if (count >= maxMock) {
+          throw new ForbiddenException({
+            message: 'Free plan limited to 10 mock tests per month. Upgrade to Basic for more.',
+            code: 'PLAN_UPGRADE_REQUIRED',
+          });
+        }
+      }
+    } else {
+      const maxRegular = PLAN_FEATURES[plan].maxRegularAttemptsPerDay;
+      if (maxRegular >= 0) {
+        const dayStart = sql`date_trunc('day', now())`;
+        const dayEnd = sql`date_trunc('day', now()) + interval '1 day'`;
+        const [countResult] = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(testAttempts)
+          .innerJoin(tests, eq(testAttempts.testId, tests.id))
+          .where(
+            and(
+              identityCondition,
+              eq(tests.isMock, false),
+              sql`${testAttempts.startedAt} >= ${dayStart}`,
+              sql`${testAttempts.startedAt} < ${dayEnd}`,
+            ),
+          );
+        const count = countResult?.count ?? 0;
+        if (count >= maxRegular) {
+          throw new ForbiddenException({
+            message: 'Free plan limited to 2 tests per day. Upgrade to Basic for more.',
+            code: 'PLAN_UPGRADE_REQUIRED',
+          });
+        }
+      }
     }
 
     const [attempt] = await db
       .insert(testAttempts)
-      .values({ userId, testId })
+      .values({
+        userId: userId ?? null,
+        deviceId: deviceId ?? null,
+        testId,
+      })
       .returning();
 
     return attempt;
   }
 
-  async findOne(attemptId: string, userId: string) {
+  async findOne(
+    attemptId: string,
+    userId: string | null,
+    deviceId: string | null,
+  ) {
     const [attempt] = await db
       .select()
       .from(testAttempts)
@@ -42,15 +131,23 @@ export class AttemptsService {
     if (!attempt) {
       throw new NotFoundException('Attempt not found');
     }
-    if (attempt.userId !== userId) {
+    const ownedByUser = userId && attempt.userId === userId;
+    const ownedByGuest = deviceId && attempt.deviceId === deviceId;
+    if (!ownedByUser && !ownedByGuest) {
       throw new ForbiddenException('Not your attempt');
     }
 
     return attempt;
   }
 
-  async findMyAttempts(userId: string, testId?: string) {
-    const conditions = [eq(testAttempts.userId, userId)];
+  async findMyAttempts(
+    userId: string | null,
+    deviceId: string | null,
+    testId?: string,
+  ) {
+    const conditions = userId
+      ? [eq(testAttempts.userId, userId)]
+      : [eq(testAttempts.deviceId, deviceId!)];
     if (testId) {
       conditions.push(eq(testAttempts.testId, testId));
     }
@@ -62,8 +159,12 @@ export class AttemptsService {
       .orderBy(testAttempts.startedAt);
   }
 
-  async getQuestionsForAttempt(attemptId: string, userId: string) {
-    const attempt = await this.findOne(attemptId, userId);
+  async getQuestionsForAttempt(
+    attemptId: string,
+    userId: string | null,
+    deviceId: string | null,
+  ) {
+    const attempt = await this.findOne(attemptId, userId, deviceId);
     if (attempt.submittedAt) {
       throw new BadRequestException('Attempt already submitted');
     }
@@ -111,11 +212,12 @@ export class AttemptsService {
 
   async submitAnswer(
     attemptId: string,
-    userId: string,
+    userId: string | null,
+    deviceId: string | null,
     questionId: string,
     selectedOptionId: string | null,
   ) {
-    const attempt = await this.findOne(attemptId, userId);
+    const attempt = await this.findOne(attemptId, userId, deviceId);
     if (attempt.submittedAt) {
       throw new BadRequestException('Attempt already submitted');
     }
@@ -149,8 +251,12 @@ export class AttemptsService {
     return answer;
   }
 
-  async submitAttempt(attemptId: string, userId: string) {
-    const attempt = await this.findOne(attemptId, userId);
+  async submitAttempt(
+    attemptId: string,
+    userId: string | null,
+    deviceId: string | null,
+  ) {
+    const attempt = await this.findOne(attemptId, userId, deviceId);
     if (attempt.submittedAt) {
       throw new BadRequestException('Attempt already submitted');
     }
@@ -189,13 +295,14 @@ export class AttemptsService {
       .where(eq(testAttempts.id, attemptId))
       .returning();
 
-    // Add earned points to user's total (mock tests and active/scheduled tests both use this flow)
-    await db
-      .update(users)
-      .set({
-        totalMarks: sql`COALESCE(${users.totalMarks}, 0) + ${score}`,
-      })
-      .where(eq(users.id, userId));
+    if (attempt.userId) {
+      await db
+        .update(users)
+        .set({
+          totalMarks: sql`COALESCE(${users.totalMarks}, 0) + ${score}`,
+        })
+        .where(eq(users.id, attempt.userId));
+    }
 
     return updated;
   }
