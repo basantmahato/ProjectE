@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateBlogPostDto {
-  @ApiProperty({ description: 'URL-friendly slug (unique)', example: 'how-to-prepare-for-exams' })
-  slug: string;
+  @ApiPropertyOptional({ description: 'URL-friendly slug (unique). If omitted, derived from title.', example: 'how-to-prepare-for-exams' })
+  slug?: string;
 
   @ApiProperty({ description: 'Post title', example: 'How to Prepare for Exams' })
   title: string;

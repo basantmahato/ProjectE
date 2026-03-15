@@ -2,12 +2,12 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Dimensions,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -25,6 +25,7 @@ const CONTENT_MAX_WIDTH = 500;
 export default function ProfileSettings() {
   const router = useRouter();
   const user = authStore((state) => state.user);
+  const hydrationDone = authStore((state) => state.hydrationDone);
   const updateUser = authStore((state) => state.updateUser);
 
   const theme = themeStore((state) => state.theme);
@@ -110,14 +111,25 @@ export default function ProfileSettings() {
     }
   };
 
-  if (!user) {
-    return null;
+  useEffect(() => {
+    if (hydrationDone && !user) {
+      router.back();
+    }
+  }, [hydrationDone, user, router]);
+
+  if (!hydrationDone || !user) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centered, { backgroundColor: colors.background }]} edges={['top']}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.subText }]}>
+          {!hydrationDone ? 'Loading…' : 'Please log in'}
+        </Text>
+      </SafeAreaView>
+    );
   }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
-
       <View style={[styles.header, { borderColor: colors.border }]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
           <MaterialIcons name="arrow-back" size={24} color={colors.text} />
@@ -295,6 +307,8 @@ export default function ProfileSettings() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  centered: { justifyContent: 'center', alignItems: 'center', gap: 12 },
+  loadingText: { fontSize: 16 },
   flex: { flex: 1 },
   header: {
     flexDirection: 'row',

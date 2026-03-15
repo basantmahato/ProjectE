@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  StatusBar,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -21,6 +21,7 @@ import { themeStore } from '@/store/themeStore';
 import { darkColors, lightColors } from '@/themes/color';
 
 import { authStore } from '@/store/authStore';
+import { useGoogleAuthRequest } from '@/lib/googleAuth';
 
 const { width } = Dimensions.get('window');
 
@@ -32,16 +33,31 @@ export default function RegisterScreen() {
   const isDark = theme === 'dark';
 
   const register = authStore((state) => state.register);
+  const loginWithGoogle = authStore((state) => state.loginWithGoogle);
+
+  const { request: googleRequest, response: googleResponse, promptAsync: googlePromptAsync, redirectUri } = useGoogleAuthRequest();
+
+  useEffect(() => {
+    if (googleResponse?.type === 'success') {
+      const { code } = googleResponse.params;
+      if (code && redirectUri) {
+        setError(null);
+        loginWithGoogle({ code, redirect_uri: redirectUri })
+          .then(() => router.replace('/(tabs)'))
+          .catch(() => setError('Google sign-in failed'));
+      }
+    } else if (googleResponse?.type === 'error') {
+      setError('Google sign-in was cancelled or failed');
+    }
+  }, [googleResponse, redirectUri, loginWithGoogle, router]);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
 
   const [nameFocused, setNameFocused] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
-  const [confirmFocused, setConfirmFocused] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
 
@@ -68,12 +84,6 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     setError(null);
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
     try {
       await register(email, password, name);
       router.replace('/(tabs)');
@@ -84,22 +94,23 @@ export default function RegisterScreen() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar
-        barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor={colors.background}
-      />
-
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.flex}
         >
-          <Animated.View
-            style={[
-              styles.container,
-              { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-            ]}
+          <ScrollView
+            style={styles.flex}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
+            <Animated.View
+              style={[
+                styles.container,
+                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+              ]}
+            >
             {/* Logo */}
             <Animated.View style={[styles.logoWrap, { transform: [{ scale: logoScale }] }]}>
               <View
@@ -215,33 +226,6 @@ export default function RegisterScreen() {
                 />
               </View>
 
-              {/* Confirm Password */}
-              <Text style={[styles.label, { color: colors.subText, marginTop: 18 }]}>
-                Confirm Password
-              </Text>
-
-              <View
-                style={[
-                  styles.inputRow,
-                  {
-                    backgroundColor: colors.card,
-                    borderColor: confirmFocused ? colors.primary : colors.border,
-                  },
-                ]}
-              >
-                <Text style={[styles.inputIcon, { color: colors.subText }]}>🔒</Text>
-                <TextInput
-                  style={[styles.input, { color: colors.text }]}
-                  placeholder="••••••••"
-                  placeholderTextColor={colors.subText}
-                  secureTextEntry
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  onFocus={() => setConfirmFocused(true)}
-                  onBlur={() => setConfirmFocused(false)}
-                />
-              </View>
-
               {error ? (
                 <Text style={styles.errorText}>{error}</Text>
               ) : null}
@@ -262,6 +246,26 @@ export default function RegisterScreen() {
                   </LinearGradient>
                 </Pressable>
               </Animated.View>
+
+              {/* Sign in with Google */}
+              <Pressable
+                style={[
+                  styles.googleBtn,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.card,
+                  },
+                ]}
+                onPress={() => {
+                  setError(null);
+                  if (googleRequest) void googlePromptAsync();
+                }}
+                disabled={!googleRequest}
+              >
+                <Text style={[styles.googleBtnText, { color: colors.text }]}>
+                  Sign in with Google
+                </Text>
+              </Pressable>
             </LinearGradient>
 
             {/* Footer */}
@@ -276,6 +280,7 @@ export default function RegisterScreen() {
               </Pressable>
             </View>
           </Animated.View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </SafeAreaProvider>
@@ -285,10 +290,14 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   flex: { flex: 1 },
-  container: {
-    flex: 1,
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 24,
-    justifyContent: 'center',
+    paddingVertical: 24,
+    paddingBottom: 40,
+  },
+  container: {
+    paddingHorizontal: 0,
   },
   logoWrap: { alignSelf: 'center', marginBottom: 28 },
   logoRing: {
@@ -353,6 +362,15 @@ const styles = StyleSheet.create({
     height: 56,
   },
   btnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  googleBtn: {
+    marginTop: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleBtnText: { fontSize: 16, fontWeight: '600' },
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'center',

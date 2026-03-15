@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Responsive table wrapper: horizontal scroll on small screens */
+.admin-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Admin sidebar: scrollbar and nav polish */
+.admin-sidebar {
+  box-shadow: 4px 0 24px -4px rgb(0 0 0 / 0.15);
+}
+
+.admin-sidebar nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(71 85 105 / 0.6) transparent;
+}
+
+.admin-sidebar nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-sidebar nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-sidebar nav::-webkit-scrollbar-thumb {
+  background: rgb(71 85 105 / 0.6);
+  border-radius: 3px;
+}
+
+.admin-sidebar nav::-webkit-scrollbar-thumb:hover {
+  background: rgb(71 85 105 / 0.8);
+}
+
+.sidebar-nav a:focus-visible,
+.sidebar-nav button:focus-visible {
+  outline: 2px solid rgb(99 102 241);
+  outline-offset: 2px;
+}

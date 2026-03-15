@@ -13,6 +13,7 @@ import { themeStore } from '@/store/themeStore';
 import { darkColors, lightColors } from '@/themes/color';
 import { useShallow } from 'zustand/react/shallow';
 import api from '@/lib/axios';
+import { AxiosError } from 'axios';
 
 interface JobRole {
   id: string;
@@ -31,6 +32,7 @@ export default function InterviewPrepScreen() {
   const [jobRoles, setJobRoles] = useState<JobRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [upgradeRequired, setUpgradeRequired] = useState(false);
 
   useEffect(() => {
     api
@@ -38,10 +40,13 @@ export default function InterviewPrepScreen() {
       .then((res) => {
         setJobRoles(res.data);
         setError(null);
+        setUpgradeRequired(false);
       })
-      .catch(() => {
+      .catch((err: AxiosError<{ code?: string; message?: string }>) => {
         setJobRoles([]);
-        setError('Could not load job roles.');
+        const isPlanUpgrade = err.response?.status === 403 && err.response?.data?.code === 'PLAN_UPGRADE_REQUIRED';
+        setUpgradeRequired(isPlanUpgrade);
+        setError(isPlanUpgrade ? 'Upgrade to Basic to access Interview Prep.' : 'Could not load job roles.');
       })
       .finally(() => setLoading(false));
   }, []);
@@ -90,6 +95,15 @@ export default function InterviewPrepScreen() {
           <View style={[styles.empty, { backgroundColor: colors.card }]}>
             <Text style={styles.emptyIcon}>⚠️</Text>
             <Text style={[styles.emptyText, { color: colors.subText }]}>{error}</Text>
+            {upgradeRequired ? (
+              <TouchableOpacity
+                style={[styles.upgradeBtn, { backgroundColor: ACCENT }]}
+                onPress={() => router.push('/billing')}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.upgradeBtnText}>Upgrade plan</Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
         ) : jobRoles.length === 0 ? (
           <View style={[styles.empty, { backgroundColor: colors.card }]}>
@@ -123,7 +137,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyIcon: { fontSize: 32, marginBottom: 8 },
-  emptyText: { fontSize: 15 },
+  emptyText: { fontSize: 15, textAlign: 'center', marginBottom: 16 },
+  upgradeBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  upgradeBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
   list: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 },
   card: {
     borderRadius: 18,

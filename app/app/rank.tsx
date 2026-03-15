@@ -6,7 +6,6 @@ import {
   Dimensions,
   Pressable,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   View,
@@ -14,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import api from '@/lib/axios';
+import { getFirstWord } from '@/lib/format';
 import { authStore } from '@/store/authStore';
 import { themeStore } from '@/store/themeStore';
 import { darkColors, lightColors } from '@/themes/color';
@@ -68,8 +68,6 @@ export default function Rank() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
-
       <View style={[styles.header, { borderColor: colors.border }]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
           <MaterialIcons name="arrow-back" size={24} color={colors.text} />
@@ -131,7 +129,7 @@ export default function Rank() {
                   <Text style={styles.rankText}>{entry.rank}</Text>
                 </View>
                 <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
-                  {entry.name ?? 'Anonymous'}
+                  {getFirstWord(entry.name, 'Anonymous')}
                 </Text>
                 <Text style={[styles.score, { color: colors.primary }]}>{entry.totalMarks}</Text>
                 {isCurrentUser && (

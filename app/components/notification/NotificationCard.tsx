@@ -10,6 +10,7 @@ const ICON_SIZE = 44;
 type NotificationCardProps = {
   item: NotificationItem;
   colors: ThemeColors;
+  isExpanded?: boolean;
   onPress?: () => void;
 };
 
@@ -26,12 +27,25 @@ function getIconForType(type?: NotificationItem['type']) {
   }
 }
 
-export function NotificationCard({ item, colors, onPress }: NotificationCardProps) {
+export function NotificationCard({ item, colors, isExpanded, onPress }: NotificationCardProps) {
   const iconName = getIconForType(item.type);
   const isNew = item.status === 'new' || item.status === 'unread';
 
   const content = (
-    <View style={[styles.card, { backgroundColor: colors.card, paddingVertical: CARD_PADDING_V, paddingHorizontal: CARD_PADDING_H }]}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors.card,
+          paddingVertical: CARD_PADDING_V,
+          paddingHorizontal: CARD_PADDING_H,
+          ...(isExpanded && {
+            borderBottomLeftRadius: 0,
+            borderBottomRightRadius: 0,
+          }),
+        },
+      ]}
+    >
       <View style={[styles.iconWrap, { backgroundColor: colors.primary + '18' }]}>
         <MaterialIcons name={iconName as any} size={22} color={colors.primary} />
       </View>
@@ -42,7 +56,7 @@ export function NotificationCard({ item, colors, onPress }: NotificationCardProp
             { color: colors.text },
             !isNew && styles.titleRead,
           ]}
-          numberOfLines={2}
+          numberOfLines={isExpanded ? undefined : 2}
         >
           {item.title}
         </Text>
@@ -53,27 +67,38 @@ export function NotificationCard({ item, colors, onPress }: NotificationCardProp
       {isNew && (
         <View style={[styles.badge, { backgroundColor: colors.primary }]} />
       )}
+      <MaterialIcons
+        name={isExpanded ? 'expand-less' : 'expand-more'}
+        size={24}
+        color={colors.subText}
+        style={styles.chevron}
+      />
     </View>
   );
+
+  const touchableStyle = [styles.touchable, isExpanded && styles.touchableExpanded];
 
   if (onPress) {
     return (
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={onPress}
-        style={styles.touchable}
+        style={touchableStyle}
       >
         {content}
       </TouchableOpacity>
     );
   }
 
-  return <View style={styles.touchable}>{content}</View>;
+  return <View style={touchableStyle}>{content}</View>;
 }
 
 const styles = StyleSheet.create({
   touchable: {
     marginBottom: 10,
+  },
+  touchableExpanded: {
+    marginBottom: 0,
   },
   card: {
     flexDirection: 'row',
@@ -112,5 +137,8 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     marginLeft: 8,
+  },
+  chevron: {
+    marginLeft: 4,
   },
 });

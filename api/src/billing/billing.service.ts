@@ -4,6 +4,7 @@ import Razorpay from 'razorpay';
 import { db } from '../database/db';
 import { users } from '../database/schema/user.schema';
 import { eq } from 'drizzle-orm';
+import { NotificationsService } from '../notifications/notifications.service';
 import type { PlanId } from './plan-features';
 
 const PLAN_AMOUNTS_PAISE: Record<string, number> = {
@@ -14,6 +15,8 @@ const PLAN_AMOUNTS_PAISE: Record<string, number> = {
 @Injectable()
 export class BillingService {
   private razorpay: Razorpay | null = null;
+
+  constructor(private readonly notificationsService: NotificationsService) {}
 
   async getPlanForUser(userId: string): Promise<PlanId> {
     const [u] = await db
@@ -89,6 +92,16 @@ export class BillingService {
       .returning();
     if (!updated) {
       throw new BadRequestException('User not found');
+    }
+    try {
+      await this.notificationsService.createAndSendToUser(
+        userId,
+        'Transaction completed',
+        'Your payment was successful. Plan upgraded.',
+        'transaction',
+      );
+    } catch {
+      // Do not fail the payment response if notification fails
     }
     const { password: _, ...userWithoutPassword } = updated;
     return { user: userWithoutPassword };

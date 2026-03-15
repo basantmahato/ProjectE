@@ -13,6 +13,7 @@ import { TestQuestionsService } from '../tests/test-questions.service';
 import { CreateMockTestDto } from '../tests/dto/create-mock-test.dto';
 import { UpdateMockTestDto } from '../tests/dto/update-mock-test.dto';
 import { AddQuestionToTestDto } from '../tests/dto/add-question-to-test.dto';
+import { BulkUploadMockTestsDto } from '../tests/dto/bulk-upload-mock-tests.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.gaurd';
 import { RolesGuard } from '../auth/roles.gaurd';
@@ -31,6 +32,11 @@ export class MockTestsController {
   @Post()
   create(@Body() dto: CreateMockTestDto) {
     return this.testsService.createMock(dto);
+  }
+
+  @Post('bulk')
+  bulkCreate(@Body() dto: BulkUploadMockTestsDto) {
+    return this.testsService.bulkCreateMocks(dto);
   }
 
   @Get()

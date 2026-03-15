@@ -15,6 +15,8 @@ import { SamplePapersModule } from './sample-papers/sample-papers.module';
 import { InterviewPrepModule } from './interview-prep/interview-prep.module';
 import { BlogModule } from './blog/blog.module';
 import { BillingModule } from './billing/billing.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { NotesModule } from './notes/notes.module';
 
 @Module({
   controllers: [AppController],
@@ -23,6 +25,7 @@ import { BillingModule } from './billing/billing.module';
     UsersModule,
     AuthModule,
     BillingModule,
+    NotificationsModule,
     DashbaordModule,
     SubjectsModule,
     TopicsModule,
@@ -34,6 +37,7 @@ import { BillingModule } from './billing/billing.module';
     SamplePapersModule,
     InterviewPrepModule,
     BlogModule,
+    NotesModule,
   ],
 })
 export class AppModule {}

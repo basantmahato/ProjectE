@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Patch, UseGuards } from '@nestjs/common';
 import { SubjectsService } from './subjects.service';
 import { CreateSubjectDto } from './dto/create-subject.dto';
+import { UpdateSubjectDto } from './dto/update-subject.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.gaurd';
 import { RolesGuard } from 'src/auth/roles.gaurd';
@@ -30,6 +31,12 @@ export class SubjectsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.subjectsService.findOne(id);
+  }
+
+  @ApiTags('Subjects')
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateSubjectDto) {
+    return this.subjectsService.update(id, dto);
   }
 
   @ApiTags('Subjects')

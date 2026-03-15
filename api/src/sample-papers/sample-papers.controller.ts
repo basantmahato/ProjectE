@@ -23,6 +23,7 @@ import { CreateSamplePaperQuestionDto } from './dto/create-sample-paper-question
 import { UpdateSamplePaperQuestionDto } from './dto/update-sample-paper-question.dto';
 import { CreateSamplePaperQuestionOptionDto } from './dto/create-sample-paper-question-option.dto';
 import { UpdateSamplePaperQuestionOptionDto } from './dto/update-sample-paper-question-option.dto';
+import { BulkUploadSamplePapersDto } from './dto/bulk-upload-sample-papers.dto';
 
 @ApiTags('Sample Papers (Admin)')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -35,6 +36,11 @@ export class SamplePapersController {
   @Post()
   createPaper(@Body() dto: CreateSamplePaperDto) {
     return this.samplePapersService.createPaper(dto);
+  }
+
+  @Post('bulk')
+  bulkCreate(@Body() dto: BulkUploadSamplePapersDto) {
+    return this.samplePapersService.bulkCreate(dto);
   }
 
   @Get()

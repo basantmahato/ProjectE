@@ -18,6 +18,20 @@ export class SamplePapersPublicController {
     return this.samplePapersService.findAllPapers();
   }
 
+  @Get('read/slug/:slug')
+  async findOneWithFullTreeBySlug(
+    @Param('slug') slug: string,
+    @Req() req: RequestWithOptionalUser,
+    @Headers('x-device-id') deviceId?: string,
+  ) {
+    const paper = await this.samplePapersService.findOnePaperBySlug(slug);
+    return this.samplePapersService.findPaperWithFullTreeForUserOrGuest(
+      paper.id,
+      req.user?.userId ?? null,
+      deviceId ?? null,
+    );
+  }
+
   @Get('read/:paperId')
   findOneWithFullTree(
     @Param('paperId') paperId: string,

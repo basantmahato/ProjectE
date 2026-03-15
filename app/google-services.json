@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "283617262638",
+    "project_id": "edtech-d53a2",
+    "storage_bucket": "edtech-d53a2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:283617262638:android:8723372d347a50b6a4f3bf",
+        "android_client_info": {
+          "package_name": "com.edtech11.com"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDL6ISEdQjG4-aPTdIkk_843BgVzFZxGLY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:283617262638:android:98849cfd1bb0beb3a4f3bf",
+        "android_client_info": {
+          "package_name": "com.edtechapp.com"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDL6ISEdQjG4-aPTdIkk_843BgVzFZxGLY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

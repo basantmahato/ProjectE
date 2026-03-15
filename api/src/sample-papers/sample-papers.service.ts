@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -14,6 +15,7 @@ import { samplePaperQuestionOptions } from '../database/schema/samplePaperQuesti
 import { users } from '../database/schema/user.schema';
 import { PLAN_FEATURES, type PlanId } from '../billing/plan-features';
 import { eq, asc, and, sql } from 'drizzle-orm';
+import { slugify, ensureUniqueSlug } from '../common/slug.util';
 import { CreateSamplePaperDto } from './dto/create-sample-paper.dto';
 import { UpdateSamplePaperDto } from './dto/update-sample-paper.dto';
 import { CreateSamplePaperSubjectDto } from './dto/create-sample-paper-subject.dto';
@@ -24,14 +26,33 @@ import { CreateSamplePaperQuestionDto } from './dto/create-sample-paper-question
 import { UpdateSamplePaperQuestionDto } from './dto/update-sample-paper-question.dto';
 import { CreateSamplePaperQuestionOptionDto } from './dto/create-sample-paper-question-option.dto';
 import { UpdateSamplePaperQuestionOptionDto } from './dto/update-sample-paper-question-option.dto';
+import { BulkUploadSamplePapersDto } from './dto/bulk-upload-sample-papers.dto';
 
 @Injectable()
 export class SamplePapersService {
   // --- Sample Papers ---
   async createPaper(dto: CreateSamplePaperDto) {
+    const slug =
+      dto.slug != null && dto.slug.trim() !== ''
+        ? dto.slug.trim()
+        : await ensureUniqueSlug(slugify(dto.title), async (s) => {
+            const [existing] = await db
+              .select()
+              .from(samplePapers)
+              .where(eq(samplePapers.slug, s));
+            return !!existing;
+          });
+    if (dto.slug != null && dto.slug.trim() !== '') {
+      const [existing] = await db
+        .select()
+        .from(samplePapers)
+        .where(eq(samplePapers.slug, slug));
+      if (existing) throw new ConflictException('Slug already exists');
+    }
     const [paper] = await db
       .insert(samplePapers)
       .values({
+        slug,
         title: dto.title,
         description: dto.description ?? null,
       })
@@ -52,10 +73,28 @@ export class SamplePapersService {
     return paper;
   }
 
+  async findOnePaperBySlug(slug: string) {
+    const [paper] = await db
+      .select()
+      .from(samplePapers)
+      .where(eq(samplePapers.slug, slug));
+    if (!paper) throw new NotFoundException('Sample paper not found');
+    return paper;
+  }
+
   async updatePaper(id: string, dto: UpdateSamplePaperDto) {
+    if (dto.slug != null && dto.slug.trim() !== '') {
+      const [existing] = await db
+        .select()
+        .from(samplePapers)
+        .where(eq(samplePapers.slug, dto.slug.trim()));
+      if (existing && existing.id !== id)
+        throw new ConflictException('Slug already exists');
+    }
     const [updated] = await db
       .update(samplePapers)
       .set({
+        ...(dto.slug != null && { slug: dto.slug.trim() }),
         ...(dto.title != null && { title: dto.title }),
         ...(dto.description != null && { description: dto.description }),
       })
@@ -322,6 +361,47 @@ export class SamplePapersService {
       }),
     );
     return { ...paper, subjects: subjectsWithTree };
+  }
+
+  /** Bulk create sample papers with full tree (subjects → topics → questions → options). */
+  async bulkCreate(dto: BulkUploadSamplePapersDto) {
+    const created = { papers: 0 };
+    const errors: { index: number; message: string }[] = [];
+    for (let i = 0; i < dto.papers.length; i++) {
+      const paperItem = dto.papers[i];
+      try {
+        const paper = await this.createPaper({
+          slug: paperItem.slug,
+          title: paperItem.title,
+          description: paperItem.description,
+        });
+        created.papers += 1;
+        for (const subj of paperItem.subjects ?? []) {
+          const subject = await this.createSubject(paper.id, { name: subj.name });
+          for (const top of subj.topics ?? []) {
+            const topic = await this.createTopic(subject.id, { name: top.name });
+            for (let qIdx = 0; qIdx < (top.questions ?? []).length; qIdx++) {
+              const q = top.questions![qIdx];
+              const question = await this.createQuestion(topic.id, {
+                questionText: q.questionText,
+                explanation: q.explanation,
+                orderIndex: q.orderIndex ?? qIdx,
+              });
+              for (const opt of q.options ?? []) {
+                await this.createOption(question.id, {
+                  optionText: opt.optionText,
+                  isCorrect: opt.isCorrect,
+                });
+              }
+            }
+          }
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        errors.push({ index: i, message });
+      }
+    }
+    return { created, errors: errors.length ? errors : undefined };
   }
 
   /** Public: get full paper tree with free-tier limit. Supports logged-in user or guest (deviceId). */

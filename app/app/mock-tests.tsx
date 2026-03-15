@@ -65,25 +65,22 @@ export default function MockTestsScreen() {
         setError('Could not load mock tests.');
       });
 
-    if (!isAuthenticated) {
-      setAttemptByTestId(new Map());
-      pTests.finally(() => setLoading(false));
-      return;
-    }
-
-    const pAttempts = api.get<TestAttempt[]>('/attempts').then((res) => {
-      const byTestId = new Map<string, TestAttempt>();
-      for (const attempt of res.data) {
-        const existing = byTestId.get(attempt.testId);
-        if (
-          !existing ||
-          new Date(attempt.startedAt) > new Date(existing.startedAt)
-        ) {
-          byTestId.set(attempt.testId, attempt);
+    const pAttempts = api
+      .get<TestAttempt[]>('/attempts')
+      .then((res) => {
+        const byTestId = new Map<string, TestAttempt>();
+        for (const attempt of res.data) {
+          const existing = byTestId.get(attempt.testId);
+          if (
+            !existing ||
+            new Date(attempt.startedAt) > new Date(existing.startedAt)
+          ) {
+            byTestId.set(attempt.testId, attempt);
+          }
         }
-      }
-      setAttemptByTestId(byTestId);
-    }).catch(() => setAttemptByTestId(new Map()));
+        setAttemptByTestId(byTestId);
+      })
+      .catch(() => setAttemptByTestId(new Map()));
 
     Promise.all([pTests, pAttempts]).finally(() => setLoading(false));
   }, [isAuthenticated]);
@@ -209,14 +206,21 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     overflow: 'hidden',
     marginBottom: 14,
+    paddingHorizontal: 16,
+    paddingBottom: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
   },
-  accentBar: { height: 5, width: '100%' },
-  badgeRow: { flexDirection: 'row', marginTop: 12, marginBottom: 4 },
+  accentBar: {
+    height: 4,
+    width: '100%',
+    marginHorizontal: -16,
+    marginBottom: 0,
+  },
+  badgeRow: { flexDirection: 'row', marginTop: 10, marginBottom: 2 },
   mockBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -224,14 +228,14 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   mockBadgeText: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
-  title: { fontSize: 17, fontWeight: '700', lineHeight: 23, marginBottom: 6 },
-  desc: { fontSize: 13, lineHeight: 19, marginBottom: 10 },
-  metaRow: { flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' },
+  title: { fontSize: 16, fontWeight: '700', lineHeight: 22, marginBottom: 4 },
+  desc: { fontSize: 13, lineHeight: 18, marginBottom: 6 },
+  metaRow: { flexDirection: 'row', gap: 8, marginBottom: 8, flexWrap: 'wrap' },
   pill: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 20,
   },
   pillText: { fontSize: 12, fontWeight: '600' },
-  cta: { fontSize: 14, fontWeight: '700' },
+  cta: { fontSize: 13, fontWeight: '700' },
 });

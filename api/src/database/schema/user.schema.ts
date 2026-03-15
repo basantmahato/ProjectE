@@ -10,7 +10,9 @@ export const users = pgTable("users", {
     .notNull()
     .unique(),
 
-  password: varchar("password", { length: 255 }).notNull(),
+  password: varchar("password", { length: 255 }),
+
+  googleId: varchar("google_id", { length: 255 }).unique(),
 
   name: varchar("name", { length: 255 }),
 

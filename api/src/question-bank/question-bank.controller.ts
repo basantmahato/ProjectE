@@ -11,6 +11,7 @@ import {
 import { QuestionBankService } from './question-bank.service';
 import { CreateQuestionBankDto } from './dto/create-question-bank.dto';
 import { UpdateQuestionBankDto } from './dto/update-question-bank.dto';
+import { BulkUploadQuestionsDto } from './dto/bulk-upload-questions.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.gaurd';
 import { RolesGuard } from 'src/auth/roles.gaurd';
@@ -26,6 +27,11 @@ export class QuestionBankController {
   @Post()
   create(@Body() dto: CreateQuestionBankDto) {
     return this.questionBankService.create(dto);
+  }
+
+  @Post('bulk')
+  bulkCreate(@Body() dto: BulkUploadQuestionsDto) {
+    return this.questionBankService.bulkCreate(dto);
   }
 
   @Get()

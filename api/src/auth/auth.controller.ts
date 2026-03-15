@@ -1,9 +1,12 @@
-import { Body, Controller, Patch, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Patch, Post, Query, Req, Res, UseGuards } from "@nestjs/common";
+import type { Response } from "express";
 import { AuthService } from "./auth.service";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
+import { GoogleAuthDto } from "./dto/google-auth.dto";
 import { ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "./jwt-auth.gaurd";
+import { Public } from "./decorators/public.decorator";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { ChangePasswordDto } from "./dto/change-password.dto";
 
@@ -31,6 +34,28 @@ export class AuthController {
   @Post("login")
   login(@Body() body: LoginDto) {
     return this.authService.login(body);
+  }
+
+  @Get("google/redirect")
+  @Public()
+  googleRedirect(
+    @Query() query: Record<string, string>,
+    @Res() res: Response,
+  ) {
+    const params = new URLSearchParams(query).toString();
+    const appRedirect = `myapp://redirect${params ? `?${params}` : ""}`;
+    res.redirect(302, appRedirect);
+  }
+
+  @Post("google")
+  loginWithGoogle(@Body() body: GoogleAuthDto) {
+    return this.authService.loginWithGoogle(body);
+  }
+
+  @Get("me")
+  @UseGuards(JwtAuthGuard)
+  getMe(@Req() req: RequestWithUser) {
+    return this.authService.getMe(req.user.userId);
   }
 
   @Patch("profile")

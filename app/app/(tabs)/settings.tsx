@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import {
   Dimensions,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Switch,
   Text,
@@ -16,7 +15,10 @@ import { useShallow } from 'zustand/react/shallow';
 
 import { Avatar, Column, Row } from '@/components/settings';
 import api from '@/lib/axios';
+import { getFirstWord } from '@/lib/format';
+import { registerPushTokenIfNeeded } from '@/lib/pushNotifications';
 import { authStore } from '@/store/authStore';
+import { notificationStore } from '@/store/notificationStore';
 import { themeStore } from '@/store/themeStore';
 import { darkColors, lightColors } from '@/themes/color';
 const CONTENT_MAX_WIDTH = 500;
@@ -26,6 +28,7 @@ type SettingsRowItem = {
   label: string;
   icon: React.ComponentProps<typeof MaterialIcons>['name'];
   showSwitch?: boolean;
+  switchType?: 'theme' | 'notification';
   showChevron?: boolean;
 };
 
@@ -39,6 +42,8 @@ export default function Settings() {
   const { user, logout } = authStore(
     useShallow((state) => ({ user: state.user, logout: state.logout }))
   );
+  const notificationsEnabled = notificationStore((state) => state.enabled);
+  const setNotificationsEnabled = notificationStore((state) => state.setEnabled);
   const router = useRouter();
   const { width } = Dimensions.get('window');
 
@@ -46,6 +51,7 @@ export default function Settings() {
   const colors = dark ? darkColors : lightColors;
 
   const displayName = user?.name?.trim() || user?.email?.split('@')[0] || 'User';
+  const displayNameFirstWord = getFirstWord(displayName, 'User');
 
   const [userRank, setUserRank] = useState<number | null>(null);
 
@@ -69,15 +75,13 @@ export default function Settings() {
   const contentPadding = { paddingHorizontal: horizontalPadding };
 
   const settingsRows: SettingsRowItem[] = [
-    { id: 'appearance', label: 'Appearance', icon: 'dark-mode', showSwitch: true, showChevron: false },
-    { id: 'notifications', label: 'Notifications', icon: 'notifications-none', showChevron: true },
+    { id: 'appearance', label: 'Appearance', icon: 'dark-mode', showSwitch: true, switchType: 'theme', showChevron: false },
+    { id: 'notifications', label: 'Notifications', icon: 'notifications-none', showSwitch: true, switchType: 'notification', showChevron: false },
     { id: 'bookmarks', label: 'Manage bookmarks', icon: 'bookmark-border', showChevron: true },
   ];
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
-
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.scrollContent, contentPadding]}
@@ -91,8 +95,8 @@ export default function Settings() {
 
           {/* Single centered avatar with rank tag */}
           <Avatar
-            initial={displayName.charAt(0)}
-            name={displayName}
+            initial={displayNameFirstWord.charAt(0)}
+            name={displayNameFirstWord}
             colors={colors}
           />
           <TouchableOpacity
@@ -119,7 +123,13 @@ export default function Settings() {
             <TouchableOpacity
               style={[styles.quickActionBtn, { backgroundColor: colors.card }]}
               activeOpacity={0.7}
-              onPress={() => router.push('/profile-settings')}
+              onPress={() => {
+                if (!user) {
+                  router.push('/(auth)/login');
+                } else {
+                  router.push('/profile-settings');
+                }
+              }}
             >
               <MaterialIcons name="person-outline" size={24} color={colors.text} />
               <Text style={[styles.quickActionLabel, { color: colors.text }]}>Profile</Text>
@@ -140,16 +150,28 @@ export default function Settings() {
                 disabled={item.showSwitch}
                 onPress={() => {
                   if (item.id === 'bookmarks') router.push('/bookmarked-blogs');
-                  if (item.id === 'notifications') router.push('/notifications');
                 }}
               >
                 <Row gap={14} style={styles.settingsRow}>
                   <MaterialIcons name={item.icon} size={22} color={colors.text} />
                   <Text style={[styles.settingsRowLabel, { color: colors.text }]}>{item.label}</Text>
-                  {item.showSwitch ? (
+                  {item.showSwitch && item.switchType === 'theme' ? (
                     <Switch
                       value={dark}
                       onValueChange={() => toggleTheme()}
+                      trackColor={{ false: '#555', true: colors.primary }}
+                      thumbColor="#fff"
+                      ios_backgroundColor="#555"
+                    />
+                  ) : item.showSwitch && item.switchType === 'notification' ? (
+                    <Switch
+                      value={notificationsEnabled}
+                      onValueChange={(value) => {
+                        setNotificationsEnabled(value);
+                        if (value && user) {
+                          registerPushTokenIfNeeded().catch(() => {});
+                        }
+                      }}
                       trackColor={{ false: '#555', true: colors.primary }}
                       thumbColor="#fff"
                       ios_backgroundColor="#555"

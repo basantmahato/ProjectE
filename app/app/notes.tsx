@@ -1,0 +1,182 @@
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router, Stack } from 'expo-router';
+import { themeStore } from '@/store/themeStore';
+import { darkColors, lightColors } from '@/themes/color';
+import { useShallow } from 'zustand/react/shallow';
+import api from '@/lib/axios';
+
+interface Subject {
+  id: string;
+  name: string;
+  examType: string | null;
+  createdAt: string;
+}
+
+const NOTES_ACCENT = '#10b981';
+
+export default function NotesScreen() {
+  const { theme } = themeStore(useShallow((state) => ({ theme: state.theme })));
+  const dark = theme === 'dark';
+  const colors = dark ? darkColors : lightColors;
+
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .get<Subject[]>('/notes/subjects')
+      .then((res) => {
+        setSubjects(res.data ?? []);
+        setError(null);
+      })
+      .catch(() => {
+        setSubjects([]);
+        setError('Could not load subjects.');
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const renderItem = ({ item }: { item: Subject }) => (
+    <TouchableOpacity
+      style={[styles.card, { backgroundColor: colors.card }]}
+      onPress={() => router.push(`/notes/${item.id}`)}
+      activeOpacity={0.75}
+    >
+      <View style={[styles.accentBar, { backgroundColor: NOTES_ACCENT }]} />
+      <View style={[styles.badge, { backgroundColor: NOTES_ACCENT + '22' }]}>
+        <Text style={[styles.badgeText, { color: NOTES_ACCENT }]}>Subject</Text>
+      </View>
+      <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
+        {item.name}
+      </Text>
+      {item.examType ? (
+        <Text style={[styles.meta, { color: colors.subText }]} numberOfLines={1}>
+          {item.examType}
+        </Text>
+      ) : null}
+      <Text style={[styles.cta, { color: NOTES_ACCENT }]}>View topics →</Text>
+    </TouchableOpacity>
+  );
+
+  return (
+    <>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Notes',
+          headerBackTitle: 'Back',
+          headerStyle: { backgroundColor: colors.background },
+          headerTintColor: colors.text,
+          headerShadowVisible: false,
+        }}
+      />
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+        edges={['bottom']}
+      >
+        {loading ? (
+          <ActivityIndicator color={NOTES_ACCENT} style={styles.loader} />
+        ) : error ? (
+          <View style={[styles.empty, { backgroundColor: colors.card }]}>
+            <Text style={styles.emptyIcon}>⚠️</Text>
+            <Text style={[styles.emptyText, { color: colors.subText }]}>{error}</Text>
+          </View>
+        ) : subjects.length === 0 ? (
+          <View style={[styles.empty, { backgroundColor: colors.card }]}>
+            <Text style={styles.emptyIcon}>📚</Text>
+            <Text style={[styles.emptyText, { color: colors.subText }]}>
+              No subjects yet. Check back later.
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={subjects}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </SafeAreaView>
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  loader: {
+    marginTop: 48,
+  },
+  listContent: {
+    padding: 16,
+    paddingBottom: 32,
+  },
+  card: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  accentBar: {
+    height: 4,
+    width: '100%',
+  },
+  badge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginTop: 12,
+    marginLeft: 16,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 8,
+    marginHorizontal: 16,
+    marginBottom: 4,
+  },
+  meta: {
+    fontSize: 13,
+    marginHorizontal: 16,
+    marginBottom: 8,
+  },
+  cta: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  empty: {
+    margin: 16,
+    padding: 32,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  emptyText: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+});

@@ -8,7 +8,8 @@ import { blogPosts } from '../database/schema/blogPost.schema';
 import { blogComments } from '../database/schema/blogComment.schema';
 import { blogCommentReplies } from '../database/schema/blogCommentReply.schema';
 import { users } from '../database/schema/user.schema';
-import { eq, desc, and, asc } from 'drizzle-orm';
+import { eq, desc, and, asc, sql } from 'drizzle-orm';
+import { slugify, ensureUniqueSlug } from '../common/slug.util';
 import { CreateBlogPostDto } from './dto/create-blog-post.dto';
 import { UpdateBlogPostDto } from './dto/update-blog-post.dto';
 
@@ -16,16 +17,28 @@ import { UpdateBlogPostDto } from './dto/update-blog-post.dto';
 export class BlogService {
   // --- Admin: CRUD posts ---
   async createPost(dto: CreateBlogPostDto, authorId: string) {
-    const [existing] = await db
-      .select()
-      .from(blogPosts)
-      .where(eq(blogPosts.slug, dto.slug));
-    if (existing) throw new ConflictException('Slug already exists');
+    const slug =
+      dto.slug != null && dto.slug.trim() !== ''
+        ? dto.slug.trim()
+        : await ensureUniqueSlug(slugify(dto.title), async (s) => {
+            const [existing] = await db
+              .select()
+              .from(blogPosts)
+              .where(eq(blogPosts.slug, s));
+            return !!existing;
+          });
+    if (dto.slug != null && dto.slug.trim() !== '') {
+      const [existing] = await db
+        .select()
+        .from(blogPosts)
+        .where(eq(blogPosts.slug, slug));
+      if (existing) throw new ConflictException('Slug already exists');
+    }
 
     const [post] = await db
       .insert(blogPosts)
       .values({
-        slug: dto.slug,
+        slug,
         title: dto.title,
         content: dto.content,
         excerpt: dto.excerpt ?? null,
@@ -135,6 +148,44 @@ export class BlogService {
       .from(blogPosts)
       .where(eq(blogPosts.isPublished, true))
       .orderBy(desc(blogPosts.publishedAt));
+  }
+
+  async findPublishedPostsPaginated(page: number = 1, limit: number = 9) {
+    const pageNum = Math.max(1, page);
+    const limitNum = Math.min(50, Math.max(1, limit));
+    const offset = (pageNum - 1) * limitNum;
+
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(blogPosts)
+      .where(eq(blogPosts.isPublished, true));
+
+    const total = countResult?.count ?? 0;
+    const data = await db
+      .select({
+        id: blogPosts.id,
+        slug: blogPosts.slug,
+        title: blogPosts.title,
+        excerpt: blogPosts.excerpt,
+        featuredImage: blogPosts.featuredImage,
+        publishedAt: blogPosts.publishedAt,
+        updatedAt: blogPosts.updatedAt,
+        metaTitle: blogPosts.metaTitle,
+        metaDescription: blogPosts.metaDescription,
+      })
+      .from(blogPosts)
+      .where(eq(blogPosts.isPublished, true))
+      .orderBy(desc(blogPosts.publishedAt))
+      .limit(limitNum)
+      .offset(offset);
+
+    return {
+      data,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum) || 1,
+    };
   }
 
   async findPublishedBySlug(slug: string) {

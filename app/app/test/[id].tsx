@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -10,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
+import { AxiosError } from 'axios';
 import { themeStore } from '@/store/themeStore';
 import { darkColors, lightColors } from '@/themes/color';
 import { useShallow } from 'zustand/react/shallow';
@@ -51,15 +51,22 @@ export default function TestDetailScreen() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  const [upgradeRequired, setUpgradeRequired] = useState(false);
+
   const handleStartTest = useCallback(async () => {
     if (!test || starting) return;
     setStarting(true);
+    setUpgradeRequired(false);
     try {
       const res = await api.post<{ id: string }>('/attempts', { testId: test.id });
       const attemptId = res.data.id;
       router.replace(`/attempt/${attemptId}`);
-    } catch {
-      setError('Could not start the test. Please try again.');
+    } catch (err) {
+      const ax = err as AxiosError<{ code?: string; message?: string }>;
+      const isPlanUpgrade = ax.response?.status === 403 && ax.response?.data?.code === 'PLAN_UPGRADE_REQUIRED';
+      setUpgradeRequired(isPlanUpgrade);
+      setError(isPlanUpgrade ? (ax.response?.data?.message ?? 'Free plan limit reached. Upgrade for more attempts.') : 'Could not start the test. Please try again.');
+    } finally {
       setStarting(false);
     }
   }, [test, starting]);
@@ -77,6 +84,15 @@ export default function TestDetailScreen() {
       <SafeAreaView style={[styles.centered, { backgroundColor: colors.background }]}>
         <Text style={styles.errorIcon}>⚠️</Text>
         <Text style={[styles.errorText, { color: colors.subText }]}>{error ?? 'Test not found.'}</Text>
+        {upgradeRequired ? (
+          <TouchableOpacity
+            style={[styles.upgradeBtn, { backgroundColor: colors.primary }]}
+            onPress={() => router.push('/billing')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.upgradeBtnText}>Upgrade plan</Text>
+          </TouchableOpacity>
+        ) : null}
         <TouchableOpacity
           style={[styles.backBtn, { borderColor: colors.border }]}
           onPress={() => router.back()}
@@ -89,8 +105,6 @@ export default function TestDetailScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
-
       <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backIconBtn}>
           <Text style={[styles.backIcon, { color: colors.primary }]}>← Back</Text>
@@ -98,6 +112,7 @@ export default function TestDetailScreen() {
       </View>
 
       <ScrollView
+        style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -177,6 +192,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 32,
   },
+  upgradeBtn: {
+    marginTop: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    alignSelf: 'center',
+  },
+  upgradeBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
   backBtn: {
     marginTop: 8,
     paddingHorizontal: 24,
@@ -202,7 +225,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
+  scroll: {
+    flex: 1,
+  },
   scrollContent: {
+    flexGrow: 1,
     padding: 20,
     gap: 16,
     paddingBottom: 32,

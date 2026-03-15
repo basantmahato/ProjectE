@@ -14,11 +14,10 @@ const PADDING_MAX = 24;
 
 type NotificationHeaderProps = {
   colors: ThemeColors;
-  onFilterPress?: () => void;
   onClose?: () => void;
 };
 
-export function NotificationHeader({ colors, onFilterPress, onClose }: NotificationHeaderProps) {
+export function NotificationHeader({ colors, onClose }: NotificationHeaderProps) {
   const { width } = useWindowDimensions();
   const horizontalPadding = Math.min(
     Math.max(width * 0.05, PADDING_MIN),
@@ -49,14 +48,6 @@ export function NotificationHeader({ colors, onFilterPress, onClose }: Notificat
         )}
         <Text style={[styles.title, { color: colors.text }]}>Notifications</Text>
       </View>
-      <TouchableOpacity
-        style={[styles.filterBtn, { backgroundColor: colors.border }]}
-        activeOpacity={0.7}
-        onPress={onFilterPress}
-      >
-        <MaterialIcons name="filter-list" size={20} color={colors.text} />
-        <Text style={[styles.filterLabel, { color: colors.text }]}>Filter</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -84,17 +75,5 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     letterSpacing: -0.5,
-  },
-  filterBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 10,
-    gap: 6,
-  },
-  filterLabel: {
-    fontSize: 14,
-    fontWeight: '600',
   },
 });

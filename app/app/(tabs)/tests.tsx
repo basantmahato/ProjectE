@@ -1,13 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -15,8 +14,22 @@ import { useShallow } from 'zustand/react/shallow';
 
 import { DashboardHeader } from '@/components/home';
 import api from '@/lib/axios';
+import { canAccessFeature } from '@/lib/plans';
+import { authStore } from '@/store/authStore';
 import { themeStore } from '@/store/themeStore';
 import { darkColors, lightColors } from '@/themes/color';
+
+const HORIZONTAL_PADDING_MIN = 16;
+const HORIZONTAL_PADDING_MAX = 24;
+const CONTENT_MAX_WIDTH = 600;
+
+function chunk<T>(arr: T[], size: number): T[][] {
+  const result: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+}
 
 interface PublishedTest {
   id: string;
@@ -54,6 +67,8 @@ const TEST_CATEGORIES: Array<{
   { id: '6', title: 'Performance', icon: '📊', count: 'View Stats', color: '#ec4899', route: '/performance' },
 ];
 
+const CATEGORY_ROWS = chunk(TEST_CATEGORIES, 2);
+
 const ACCENT_COLORS = [
   '#6366f1',
   '#10b981',
@@ -65,8 +80,17 @@ const ACCENT_COLORS = [
 
 const TestScreen = () => {
   const { theme } = themeStore(useShallow((state) => ({ theme: state.theme })));
+  const user = authStore((state) => state.user);
+  const { width } = useWindowDimensions();
   const dark = theme === 'dark';
   const colors = dark ? darkColors : lightColors;
+  const canAccessInterviewPrep = canAccessFeature(user?.plan, 'interviewPrep');
+
+  const horizontalPadding = useMemo(
+    () => Math.min(Math.max(width * 0.05, HORIZONTAL_PADDING_MIN), HORIZONTAL_PADDING_MAX),
+    [width]
+  );
+  const contentPadding = useMemo(() => ({ paddingHorizontal: horizontalPadding }), [horizontalPadding]);
 
   const [activeTests, setActiveTests] = useState<PublishedTest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,21 +123,6 @@ const TestScreen = () => {
       })
       .finally(() => setLoading(false));
   }, []);
-
-  const renderCategoryItem = ({ item }: { item: typeof TEST_CATEGORIES[number] }) => (
-    <TouchableOpacity
-      style={[styles.card, { backgroundColor: colors.card }]}
-      onPress={() => { if (item.route) router.push(item.route); }}
-      activeOpacity={item.route ? 0.7 : 1}
-      disabled={!item.route}
-    >
-      <View style={[styles.iconContainer, { backgroundColor: item.color + '20' }]}>
-        <Text style={styles.iconText}>{item.icon}</Text>
-      </View>
-      <Text style={[styles.cardTitle, { color: colors.text }]}>{item.title}</Text>
-      <Text style={[styles.cardSubtitle, { color: colors.subText }]}>{item.count}</Text>
-    </TouchableOpacity>
-  );
 
   const renderActiveTestsSection = () => (
     <View style={styles.section}>
@@ -183,29 +192,62 @@ const TestScreen = () => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={['top']}
+    >
       <DashboardHeader
         colors={colors}
         unreadCount={0}
         title="Practice Arena"
         subtitle="Select a category to begin your prep"
       />
-      <FlatList
-        data={TEST_CATEGORIES}
-        renderItem={renderCategoryItem}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        contentContainerStyle={styles.grid}
-        columnWrapperStyle={styles.row}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <>
-            {renderActiveTestsSection()}
-            <Text style={[styles.categoriesLabel, { color: colors.subText }]}>Browse Categories</Text>
-          </>
-        }
-      />
+      >
+        <View style={[styles.contentWrap, contentPadding]}>
+          {renderActiveTestsSection()}
+          <Text style={[styles.categoriesLabel, { color: colors.subText }]}>Browse Categories</Text>
+          <View style={styles.grid}>
+            {CATEGORY_ROWS.map((row, rowIndex) => (
+              <View key={rowIndex} style={styles.row}>
+                {row.map((item) => {
+                  const isInterviewPrep = item.id === '5';
+                  const locked = isInterviewPrep && !canAccessInterviewPrep;
+                  return (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={[styles.card, { backgroundColor: colors.card }]}
+                      onPress={() => {
+                        if (locked) {
+                          router.push('/billing');
+                        } else if (item.route) {
+                          router.push(item.route);
+                        }
+                      }}
+                      activeOpacity={item.route || locked ? 0.7 : 1}
+                      disabled={!item.route && !locked}
+                    >
+                      <View style={[styles.iconContainer, { backgroundColor: item.color + '20' }]}>
+                        <Text style={styles.iconText}>{item.icon}</Text>
+                      </View>
+                      {locked ? (
+                        <View style={[styles.lockBadge, { backgroundColor: colors.border }]}>
+                          <Text style={[styles.lockBadgeText, { color: colors.subText }]}>Basic</Text>
+                        </View>
+                      ) : null}
+                      <Text style={[styles.cardTitle, { color: colors.text }]}>{item.title}</Text>
+                      <Text style={[styles.cardSubtitle, { color: colors.subText }]}>{locked ? 'Upgrade to access' : item.count}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -214,8 +256,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  section: {
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingTop: 0,
+    paddingBottom: 100,
+  },
+  contentWrap: {
     paddingTop: 20,
+    maxWidth: CONTENT_MAX_WIDTH,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  section: {
     paddingBottom: 8,
   },
   sectionHeader: {
@@ -267,6 +322,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.07,
     shadowRadius: 10,
     elevation: 4,
+    marginBottom: 16,
   },
   activeTestAccent: {
     height: 5,
@@ -311,16 +367,19 @@ const styles = StyleSheet.create({
   },
   grid: {
     paddingHorizontal: 12,
-    paddingBottom: 20,
   },
   row: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 16,
   },
   card: {
-    width: '47%',
+    flex: 1,
+    minWidth: 0,
+    maxWidth: '48%',
     borderRadius: 20,
     padding: 20,
-    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
@@ -346,6 +405,17 @@ const styles = StyleSheet.create({
   cardSubtitle: {
     fontSize: 12,
     fontWeight: '500',
+  },
+  lockBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginBottom: 6,
+  },
+  lockBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
   },
 });
 

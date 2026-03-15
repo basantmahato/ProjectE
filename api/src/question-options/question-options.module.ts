@@ -5,5 +5,6 @@ import { QuestionOptionsService } from './question-options.service';
 @Module({
   controllers: [QuestionOptionsController],
   providers: [QuestionOptionsService],
+  exports: [QuestionOptionsService],
 })
 export class QuestionOptionsModule {}

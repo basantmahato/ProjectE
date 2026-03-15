@@ -4,6 +4,7 @@ import { subjects } from "../src/database/schema/subjects.schema";
 import { topics } from "../src/database/schema/topics.schema";
 import { questionBank } from "../src/database/schema/questionBank.schema";
 import { questionOptions } from "../src/database/schema/questionOption.schema";
+import { slugify } from "../src/common/slug.util";
 import { eq } from "drizzle-orm";
 
 const QUESTIONS_DATA = [
@@ -149,7 +150,7 @@ async function seedQuestions() {
   if (!subject) {
     [subject] = await db
       .insert(subjects)
-      .values({ name: "Computer Science", examType: "GATE" })
+      .values({ name: "Computer Science", slug: slugify("Computer Science"), examType: "GATE" })
       .returning();
     console.log("✔ Created subject:", subject.name);
   } else {
@@ -165,7 +166,7 @@ async function seedQuestions() {
   if (!topic) {
     [topic] = await db
       .insert(topics)
-      .values({ name: "Data Structures & Algorithms", subjectId: subject.id })
+      .values({ name: "Data Structures & Algorithms", slug: slugify("Data Structures & Algorithms"), subjectId: subject.id })
       .returning();
     console.log("✔ Created topic:", topic.name);
   } else {

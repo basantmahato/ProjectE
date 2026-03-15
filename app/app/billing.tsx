@@ -1,17 +1,21 @@
+import { useRazorpay } from '@codearcade/expo-razorpay';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
   Dimensions,
   Pressable,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import api from '@/lib/axios';
+import { authStore } from '@/store/authStore';
 import { themeStore } from '@/store/themeStore';
 import { darkColors, lightColors } from '@/themes/color';
 
@@ -28,6 +32,20 @@ type Plan = {
 };
 
 const PLANS: Plan[] = [
+  {
+    id: 'free',
+    name: 'Free',
+    price: 0,
+    period: 'forever',
+    description: 'Try before you commit',
+    features: [
+      '1 trial mock test',
+      'Browse sample papers',
+      'Blog & community access',
+      'Create an account to start',
+    ],
+    highlighted: false,
+  },
   {
     id: 'basic',
     name: 'Basic',
@@ -64,18 +82,91 @@ export default function Billing() {
   const theme = themeStore((state) => state.theme);
   const dark = theme === 'dark';
   const colors = dark ? darkColors : lightColors;
+  const user = authStore((state) => state.user);
+  const setUserAfterPayment = authStore((state) => state.setUserAfterPayment);
+  const { openCheckout, RazorpayUI } = useRazorpay();
+  const [loading, setLoading] = useState(false);
 
   const { width } = Dimensions.get('window');
   const horizontalPadding = Math.min(Math.max(width * 0.05, 16), 24);
+  const currentPlan = user ? PLANS.find((p) => p.id === user.plan) : undefined;
 
-  const handleSelectPlan = (planId: string) => {
-    // Placeholder: could navigate to checkout or show payment sheet
+  const handleSelectPlan = async (planId: string) => {
+    if (planId === 'free') {
+      Alert.alert('Free plan', "You're on the Free plan. Create an account or sign in to get started.");
+      return;
+    }
+    if (!user) {
+      Alert.alert('Sign in required', 'Please sign in to upgrade your plan.');
+      router.push('/(auth)/login');
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data } = await api.post<{
+        orderId: string;
+        amount: number;
+        currency: string;
+        keyId: string;
+      }>('/billing/order', { planId });
+      const { orderId, amount, currency, keyId } = data;
+      openCheckout(
+        {
+          key: keyId,
+          amount,
+          currency,
+          order_id: orderId,
+          name: 'ProjE',
+          description: `${planId === 'basic' ? 'Basic' : 'Premium'} plan`,
+          prefill: {
+            name: user.name ?? undefined,
+            email: user.email,
+          },
+        },
+        {
+          onSuccess: async (paymentData) => {
+            try {
+              const verifyRes = await api.post<{ user: typeof user }>('/billing/verify', {
+                planId,
+                razorpay_order_id: paymentData.razorpay_order_id,
+                razorpay_payment_id: paymentData.razorpay_payment_id,
+                razorpay_signature: paymentData.razorpay_signature,
+              });
+              if (verifyRes.data?.user) {
+                await setUserAfterPayment(verifyRes.data.user);
+                setLoading(false);
+                Alert.alert('Success', `You are now on the ${planId === 'basic' ? 'Basic' : 'Premium'} plan.`, [
+                  { text: 'OK', onPress: () => router.back() },
+                ]);
+              } else {
+                setLoading(false);
+              }
+            } catch (err: unknown) {
+              setLoading(false);
+              const msg = err && typeof err === 'object' && 'response' in err
+                ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+                : 'Verification failed';
+              Alert.alert('Verification failed', String(msg));
+            }
+          },
+          onFailure: (error) => {
+            setLoading(false);
+            Alert.alert('Payment failed', error?.description ?? 'Payment could not be completed.');
+          },
+          onClose: () => setLoading(false),
+        },
+      );
+    } catch (err: unknown) {
+      setLoading(false);
+      const msg = err && typeof err === 'object' && 'response' in err
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+        : 'Could not create order';
+      Alert.alert('Error', String(msg));
+    }
   };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
-
       <View style={[styles.header, { borderColor: colors.border }]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
           <MaterialIcons name="arrow-back" size={24} color={colors.text} />
@@ -93,28 +184,68 @@ export default function Billing() {
           Choose a plan that fits your goals
         </Text>
 
-        {PLANS.map((plan) => (
+        {user && currentPlan && (
+          <View
+            style={[
+              styles.currentPlanCard,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.currentPlanLabel, { color: colors.subText }]}>
+              Your current plan
+            </Text>
+            <View style={styles.currentPlanRow}>
+              <Text style={[styles.currentPlanName, { color: colors.text }]}>
+                {currentPlan.name}
+              </Text>
+              {currentPlan.price === 0 ? (
+                <Text style={[styles.currentPlanPrice, { color: colors.primary }]}>Free</Text>
+              ) : (
+                <Text style={[styles.currentPlanPrice, { color: colors.primary }]}>
+                  ₹{currentPlan.price}/{currentPlan.period}
+                </Text>
+              )}
+            </View>
+          </View>
+        )}
+
+        {PLANS.map((plan) => {
+          const isCurrentPlan = user && plan.id === user.plan;
+          return (
           <View
             key={plan.id}
             style={[
               styles.planCard,
               {
                 backgroundColor: colors.card,
-                borderColor: plan.highlighted ? colors.primary : colors.border,
-                borderWidth: plan.highlighted ? 2 : 1,
+                borderColor: plan.highlighted && !isCurrentPlan ? colors.primary : colors.border,
+                borderWidth: plan.highlighted && !isCurrentPlan ? 2 : 1,
               },
             ]}
           >
-            {plan.highlighted && (
+            {isCurrentPlan ? (
+              <View style={[styles.badge, styles.badgeCurrent, { backgroundColor: colors.border }]}>
+                <Text style={[styles.badgeText, styles.badgeTextCurrent, { color: colors.text }]}>Current plan</Text>
+              </View>
+            ) : plan.highlighted ? (
               <View style={[styles.badge, { backgroundColor: colors.primary }]}>
                 <Text style={styles.badgeText}>Popular</Text>
               </View>
-            )}
+            ) : null}
             <View style={styles.planHeader}>
               <Text style={[styles.planName, { color: colors.text }]}>{plan.name}</Text>
               <View style={styles.priceRow}>
-                <Text style={[styles.price, { color: colors.primary }]}>₹{plan.price}</Text>
-                <Text style={[styles.period, { color: colors.subText }]}>/{plan.period}</Text>
+                {plan.price === 0 ? (
+                  <Text style={[styles.price, { color: colors.primary }]}>Free</Text>
+                ) : (
+                  <>
+                    <Text style={[styles.price, { color: colors.primary }]}>₹{plan.price}</Text>
+                    <Text style={[styles.period, { color: colors.subText }]}>/{plan.period}</Text>
+                  </>
+                )}
               </View>
             </View>
             <Text style={[styles.planDescription, { color: colors.subText }]}>
@@ -134,27 +265,40 @@ export default function Billing() {
               ))}
             </View>
             <Pressable
-              onPress={() => handleSelectPlan(plan.id)}
+              onPress={() => !isCurrentPlan && handleSelectPlan(plan.id)}
+              disabled={loading || isCurrentPlan}
               style={({ pressed }) => [
                 styles.planBtn,
                 {
-                  backgroundColor: plan.highlighted ? colors.primary : colors.border,
-                  opacity: pressed ? 0.9 : 1,
+                  backgroundColor: isCurrentPlan ? colors.border : plan.highlighted ? colors.primary : colors.border,
+                  opacity: loading || isCurrentPlan ? 0.6 : pressed ? 0.9 : 1,
                 },
               ]}
             >
-              <Text
-                style={[
-                  styles.planBtnText,
-                  { color: plan.highlighted ? '#fff' : colors.text },
-                ]}
-              >
-                {plan.highlighted ? 'Get Premium' : 'Get Basic'}
-              </Text>
+              {loading && !isCurrentPlan ? (
+                <ActivityIndicator color={plan.highlighted ? '#fff' : colors.text} size="small" />
+              ) : (
+                <Text
+                  style={[
+                    styles.planBtnText,
+                    { color: isCurrentPlan ? colors.subText : plan.highlighted ? '#fff' : colors.text },
+                  ]}
+                >
+                  {isCurrentPlan
+                    ? 'Current plan'
+                    : plan.id === 'free'
+                      ? 'Get Started'
+                      : plan.highlighted
+                        ? 'Get Premium'
+                        : 'Get Basic'}
+                </Text>
+              )}
             </Pressable>
           </View>
-        ))}
+          );
+        })}
       </ScrollView>
+      {RazorpayUI}
     </SafeAreaView>
   );
 }
@@ -184,6 +328,31 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
+  currentPlanCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+  },
+  currentPlanLabel: {
+    fontSize: 13,
+    marginBottom: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  currentPlanRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  currentPlanName: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  currentPlanPrice: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
   planCard: {
     borderRadius: 20,
     padding: 20,
@@ -204,6 +373,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
   },
+  badgeCurrent: {},
+  badgeTextCurrent: {},
   planHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',

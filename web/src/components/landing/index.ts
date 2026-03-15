@@ -1,0 +1,12 @@
+export { Navbar } from "./Navbar";
+export { Hero } from "./Hero";
+export { FeaturesImpact } from "./FeaturesImpact";
+export { FeaturesScale } from "./FeaturesScale";
+export { Pricing } from "./Pricing";
+export { HowItWorks } from "./HowItWorks";
+export { Testimonials } from "./Testimonials";
+export { FAQ } from "./FAQ";
+export { CTA } from "./CTA";
+export { CTAWithPlanCheck } from "./CTAWithPlanCheck";
+export { Footer } from "./Footer";
+export { PageFooter, PageFooterWithPricing } from "./PageFooter";

@@ -10,6 +10,7 @@ import { CreateTopicDto } from './dto/create-topic.dto';
 import { UpdateTopicDto } from './dto/update-topic.dto';
 import { CreateSubtopicDto } from './dto/create-subtopic.dto';
 import { UpdateSubtopicDto } from './dto/update-subtopic.dto';
+import { BulkUploadInterviewPrepDto } from './dto/bulk-upload-interview-prep.dto';
 
 @Injectable()
 export class InterviewPrepService {
@@ -173,6 +174,40 @@ export class InterviewPrepService {
       .returning();
     if (!deleted) throw new NotFoundException('Subtopic not found');
     return { message: 'Subtopic deleted successfully' };
+  }
+
+  /** Bulk create job roles with optional topics and subtopics. */
+  async bulkCreate(dto: BulkUploadInterviewPrepDto) {
+    const created = { jobRoles: 0 };
+    const errors: { index: number; message: string }[] = [];
+    for (let i = 0; i < dto.jobRoles.length; i++) {
+      const roleItem = dto.jobRoles[i];
+      try {
+        const role = await this.createJobRole({
+          name: roleItem.name,
+          description: roleItem.description,
+        });
+        created.jobRoles += 1;
+        for (const top of roleItem.topics ?? []) {
+          const topic = await this.createTopic(role.id, {
+            name: top.name,
+            explanation: top.explanation,
+            orderIndex: top.orderIndex,
+          });
+          for (const sub of top.subtopics ?? []) {
+            await this.createSubtopic(topic.id, {
+              name: sub.name,
+              explanation: sub.explanation,
+              orderIndex: sub.orderIndex,
+            });
+          }
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        errors.push({ index: i, message });
+      }
+    }
+    return { created, errors: errors.length ? errors : undefined };
   }
 
   // --- Public: full tree for reading ---

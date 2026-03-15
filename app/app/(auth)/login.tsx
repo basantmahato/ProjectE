@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -21,6 +20,7 @@ import { themeStore } from '@/store/themeStore';
 import { darkColors, lightColors } from '@/themes/color';
 
 import { authStore } from '@/store/authStore';
+import { useGoogleAuthRequest } from '@/lib/googleAuth';
 
 const { width } = Dimensions.get('window');
 
@@ -43,7 +43,24 @@ export default function LoginScreen() {
   const btnScale = useRef(new Animated.Value(1)).current;
 
   const login = authStore((state) => state.login);
+  const loginWithGoogle = authStore((state) => state.loginWithGoogle);
   const [loginError, setLoginError] = useState<string | null>(null);
+
+  const { request: googleRequest, response: googleResponse, promptAsync: googlePromptAsync, redirectUri } = useGoogleAuthRequest();
+
+  useEffect(() => {
+    if (googleResponse?.type === 'success') {
+      const { code } = googleResponse.params;
+      if (code && redirectUri) {
+        setLoginError(null);
+        loginWithGoogle({ code, redirect_uri: redirectUri })
+          .then(() => router.replace('/(tabs)'))
+          .catch(() => setLoginError('Google sign-in failed'));
+      }
+    } else if (googleResponse?.type === 'error') {
+      setLoginError('Google sign-in was cancelled or failed');
+    }
+  }, [googleResponse, redirectUri, loginWithGoogle, router]);
 
   useEffect(() => {
     Animated.parallel([
@@ -65,11 +82,6 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar
-        barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor={colors.background}
-      />
-
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -206,6 +218,26 @@ export default function LoginScreen() {
                   </LinearGradient>
                 </Pressable>
               </Animated.View>
+
+              {/* Sign in with Google */}
+              <Pressable
+                style={[
+                  styles.googleBtn,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.card,
+                  },
+                ]}
+                onPress={() => {
+                  setLoginError(null);
+                  if (googleRequest) void googlePromptAsync();
+                }}
+                disabled={!googleRequest}
+              >
+                <Text style={[styles.googleBtnText, { color: colors.text }]}>
+                  Sign in with Google
+                </Text>
+              </Pressable>
             </LinearGradient>
 
             {/* Footer */}
@@ -219,6 +251,19 @@ export default function LoginScreen() {
                 </Text>
               </Pressable>
             </View>
+
+            {/* Login later - show after onboarding */}
+            <Pressable
+              style={({ pressed }) => [
+                styles.loginLaterWrap,
+                { opacity: pressed ? 0.7 : 1 },
+              ]}
+              onPress={() => router.replace('/(tabs)')}
+            >
+              <Text style={[styles.loginLaterText, { color: colors.subText }]}>
+                Login later
+              </Text>
+            </Pressable>
           </Animated.View>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -292,6 +337,15 @@ const styles = StyleSheet.create({
     height: 56,
   },
   btnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  googleBtn: {
+    marginTop: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleBtnText: { fontSize: 16, fontWeight: '600' },
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -299,4 +353,14 @@ const styles = StyleSheet.create({
   },
   footerText: { fontSize: 14 },
   footerLink: { fontSize: 14, fontWeight: '600' },
+  loginLaterWrap: {
+    alignSelf: 'center',
+    marginTop: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+  },
+  loginLaterText: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
 });

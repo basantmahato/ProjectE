@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Param,
+  Query,
   UseGuards,
   Request,
 } from '@nestjs/common';
@@ -19,7 +20,15 @@ export class BlogPublicController {
   constructor(private readonly blogService: BlogService) {}
 
   @Get('posts')
-  findPublishedPosts() {
+  findPublishedPosts(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    if (page !== undefined || limit !== undefined) {
+      const pageNum = page ? parseInt(page, 10) : 1;
+      const limitNum = limit ? parseInt(limit, 10) : 9;
+      return this.blogService.findPublishedPostsPaginated(pageNum, limitNum);
+    }
     return this.blogService.findPublishedPosts();
   }
 

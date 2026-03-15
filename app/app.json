@@ -4,6 +4,13 @@
     "slug": "my-app",
     "version": "1.0.0",
     "orientation": "portrait",
+    "extra": {
+      "eas": {
+        "projectId": "c58aa549-8e61-4e19-9fe4-6fef1de1cac6"
+      },
+      "fcmSenderId": "283617262638",
+      "router": {}
+    },
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
@@ -12,6 +19,8 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.edtechapp.com",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -27,6 +36,14 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#ffffff",
+          "sounds": []
+        }
+      ],
       [
         "expo-splash-screen",
         {

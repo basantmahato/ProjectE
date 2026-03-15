@@ -2,17 +2,28 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { db } from '../database/db';
 import { tests } from '../database/schema/test.schema';
 import { and, eq, isNull, lte, or, gte, gt } from 'drizzle-orm';
+import { slugify, ensureUniqueSlug } from '../common/slug.util';
 import { CreateTestDto } from './dto/create-test.dto';
 import { UpdateTestDto } from './dto/update-test.dto';
 import { CreateMockTestDto } from './dto/create-mock-test.dto';
 import { UpdateMockTestDto } from './dto/update-mock-test.dto';
+import { BulkUploadTestsDto } from './dto/bulk-upload-tests.dto';
+import { BulkUploadMockTestsDto } from './dto/bulk-upload-mock-tests.dto';
+import { TestQuestionsService } from './test-questions.service';
 
 @Injectable()
 export class TestsService {
+  constructor(private readonly testQuestionsService: TestQuestionsService) {}
+
   async create(dto: CreateTestDto) {
+    const slug = await ensureUniqueSlug(slugify(dto.title), async (s) => {
+      const [existing] = await db.select().from(tests).where(eq(tests.slug, s));
+      return !!existing;
+    });
     const test = await db
       .insert(tests)
       .values({
+        slug,
         title: dto.title,
         description: dto.description,
         durationMinutes: dto.durationMinutes,
@@ -46,9 +57,14 @@ export class TestsService {
   }
 
   async createMock(dto: CreateMockTestDto) {
+    const slug = await ensureUniqueSlug(slugify(dto.title), async (s) => {
+      const [existing] = await db.select().from(tests).where(eq(tests.slug, s));
+      return !!existing;
+    });
     const test = await db
       .insert(tests)
       .values({
+        slug,
         title: dto.title,
         description: dto.description,
         durationMinutes: dto.durationMinutes,
@@ -103,6 +119,36 @@ export class TestsService {
     }
 
     return test[0];
+  }
+
+  async findOnePublishedBySlug(slug: string) {
+    const [test] = await db
+      .select()
+      .from(tests)
+      .where(eq(tests.slug, slug));
+
+    if (!test || !test.isPublished || test.isMock) {
+      throw new NotFoundException('Test not found');
+    }
+    const now = new Date();
+    if (test.scheduledAt && test.scheduledAt > now) {
+      throw new NotFoundException('Test not found');
+    }
+    if (test.expiresAt && test.expiresAt < now) {
+      throw new NotFoundException('Test not found');
+    }
+    return test;
+  }
+
+  async findOnePublishedMockBySlug(slug: string) {
+    const [test] = await db
+      .select()
+      .from(tests)
+      .where(
+        and(eq(tests.slug, slug), eq(tests.isMock, true), eq(tests.isPublished, true)),
+      );
+    if (!test) throw new NotFoundException('Mock test not found');
+    return test;
   }
 
   async updateMock(id: string, dto: UpdateMockTestDto) {
@@ -222,5 +268,47 @@ export class TestsService {
     }
 
     return { message: 'Test deleted successfully' };
+  }
+
+  async bulkCreate(dto: BulkUploadTestsDto) {
+    const created = { count: 0 };
+    const errors: { index: number; message: string }[] = [];
+    for (let i = 0; i < dto.tests.length; i++) {
+      try {
+        await this.create(dto.tests[i]);
+        created.count += 1;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        errors.push({ index: i, message });
+      }
+    }
+    return { created, errors: errors.length ? errors : undefined };
+  }
+
+  async bulkCreateMocks(dto: BulkUploadMockTestsDto) {
+    const created = { count: 0 };
+    const errors: { index: number; message: string }[] = [];
+    for (let i = 0; i < dto.mockTests.length; i++) {
+      const item = dto.mockTests[i];
+      try {
+        const mock = await this.createMock({
+          title: item.title,
+          description: item.description,
+          durationMinutes: item.durationMinutes,
+          totalMarks: item.totalMarks,
+          isPublished: item.isPublished,
+        });
+        created.count += 1;
+        if (item.questionIds?.length) {
+          for (let order = 0; order < item.questionIds.length; order++) {
+            await this.testQuestionsService.addQuestion(mock.id, item.questionIds[order], order);
+          }
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        errors.push({ index: i, message });
+      }
+    }
+    return { created, errors: errors.length ? errors : undefined };
   }
 }

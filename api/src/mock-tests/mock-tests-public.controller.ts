@@ -14,6 +14,11 @@ export class MockTestsPublicController {
     return this.testsService.findPublishedMocks();
   }
 
+  @Get('published/slug/:slug')
+  findOnePublishedBySlug(@Param('slug') slug: string) {
+    return this.testsService.findOnePublishedMockBySlug(slug);
+  }
+
   @Get('published/:id')
   findOnePublished(@Param('id') id: string) {
     return this.testsService.findOnePublishedMock(id);

@@ -4,10 +4,12 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { AxiosError } from 'axios';
 import { themeStore } from '@/store/themeStore';
 import { darkColors, lightColors } from '@/themes/color';
 import { useShallow } from 'zustand/react/shallow';
@@ -47,6 +49,7 @@ export default function InterviewPrepRoleScreen() {
   const [role, setRole] = useState<JobRoleDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [upgradeRequired, setUpgradeRequired] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -55,10 +58,13 @@ export default function InterviewPrepRoleScreen() {
       .then((res) => {
         setRole(res.data);
         setError(null);
+        setUpgradeRequired(false);
       })
-      .catch(() => {
+      .catch((err: AxiosError<{ code?: string; message?: string }>) => {
         setRole(null);
-        setError('Could not load job role.');
+        const isPlanUpgrade = err.response?.status === 403 && err.response?.data?.code === 'PLAN_UPGRADE_REQUIRED';
+        setUpgradeRequired(isPlanUpgrade);
+        setError(isPlanUpgrade ? 'Upgrade to Basic to access Interview Prep.' : 'Could not load job role.');
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -82,6 +88,15 @@ export default function InterviewPrepRoleScreen() {
           <View style={[styles.empty, { backgroundColor: colors.card }]}>
             <Text style={styles.emptyIcon}>⚠️</Text>
             <Text style={[styles.emptyText, { color: colors.subText }]}>{error ?? 'Not found'}</Text>
+            {upgradeRequired ? (
+              <TouchableOpacity
+                style={[styles.upgradeBtn, { backgroundColor: ACCENT }]}
+                onPress={() => router.push('/billing')}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.upgradeBtnText}>Upgrade plan</Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
         </SafeAreaView>
       </>
@@ -157,7 +172,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyIcon: { fontSize: 32, marginBottom: 8 },
-  emptyText: { fontSize: 15 },
+  emptyText: { fontSize: 15, textAlign: 'center', marginBottom: 16 },
+  upgradeBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  upgradeBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
   roleCard: {
     borderRadius: 16,
     overflow: 'hidden',

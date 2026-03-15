@@ -6,6 +6,7 @@ import { questionBank } from "../src/database/schema/questionBank.schema";
 import { questionOptions } from "../src/database/schema/questionOption.schema";
 import { tests } from "../src/database/schema/test.schema";
 import { testQuestions } from "../src/database/schema/testQuestions.schema";
+import { slugify } from "../src/common/slug.util";
 import { eq } from "drizzle-orm";
 
 // ─── Configuration ────────────────────────────────────────────────────────────
@@ -179,7 +180,7 @@ async function seedScheduledTest() {
     .where(eq(subjects.name, SUBJECT.name));
 
   if (!subject) {
-    [subject] = await db.insert(subjects).values(SUBJECT).returning();
+    [subject] = await db.insert(subjects).values({ ...SUBJECT, slug: slugify(SUBJECT.name) }).returning();
     console.log("✔ Created subject:", subject.name);
   } else {
     console.log("→ Subject already exists:", subject.name);
@@ -194,7 +195,7 @@ async function seedScheduledTest() {
   if (!topic) {
     [topic] = await db
       .insert(topics)
-      .values({ name: TOPIC.name, subjectId: subject.id })
+      .values({ name: TOPIC.name, slug: slugify(TOPIC.name), subjectId: subject.id })
       .returning();
     console.log("✔ Created topic:", topic.name);
   } else {
@@ -253,6 +254,7 @@ async function seedScheduledTest() {
   const [test] = await db
     .insert(tests)
     .values({
+      slug:            slugify(TEST.title),
       title:           TEST.title,
       description:     TEST.description,
       durationMinutes: TEST.durationMinutes,

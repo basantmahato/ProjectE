@@ -28,7 +28,9 @@
     "db:seed:mock-test": "tsx scripts/seed-mock-test.ts",
     "db:seed:sample-paper": "tsx scripts/seed-sample-paper.ts",
     "db:seed:interview-prep": "tsx scripts/seed-interview-prep.ts",
-    "db:seed:blog": "tsx scripts/seed-blog.ts"
+    "db:seed:blog": "tsx scripts/seed-blog.ts",
+    "db:seed:notifications": "tsx scripts/seed-notifications.ts",
+    "db:seed:notes": "tsx scripts/seed-notes.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -44,6 +46,7 @@
     "dotenv": "^17.3.1",
     "drizzle-orm": "^0.45.1",
     "drizzle-zod": "^0.8.3",
+    "google-auth-library": "^9.15.1",
     "nestjs-zod": "^5.1.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",

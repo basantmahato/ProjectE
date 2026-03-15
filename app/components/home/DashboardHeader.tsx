@@ -27,31 +27,34 @@ export function DashboardHeader({
 
   return (
     <View style={[styles.container, { backgroundColor: colors.primary }]}>
-      <View style={styles.topRow}>
-        <View style={styles.greetingBlock}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.subtitle}>{subtitle}</Text>
-        </View>
-        <TouchableOpacity
-          style={[styles.bellWrap, { backgroundColor: 'rgba(255,255,255,0.2)' }]}
-          activeOpacity={0.7}
-          onPress={() => router.push('/notifications')}
-        >
-          <MaterialIcons name="notifications" size={22} color="#fff" />
-          {unreadCount > 0 ? (
-            <View style={[styles.badge, { backgroundColor: colors.danger }]} />
-          ) : null}
-        </TouchableOpacity>
+      {/* Notification icon fixed in top-right so content changes don't affect its position */}
+      <TouchableOpacity
+        style={[styles.bellWrap, { backgroundColor: 'rgba(255,255,255,0.2)' }]}
+        activeOpacity={0.7}
+        onPress={() => router.push('/notifications')}
+      >
+        <MaterialIcons name="notifications" size={22} color="#fff" />
+        {unreadCount > 0 ? (
+          <View style={[styles.badge, { backgroundColor: colors.danger }]} />
+        ) : null}
+      </TouchableOpacity>
+      <View style={styles.greetingBlock}>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.subtitle}>{subtitle}</Text>
       </View>
     </View>
   );
 }
 
+const BELL_SIZE = 44;
+const HORIZONTAL_PADDING = 20;
+
 const styles = StyleSheet.create({
   container: {
+    minHeight: 88,
     paddingTop: 8,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: HORIZONTAL_PADDING,
+    paddingBottom: 0,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
     shadowColor: '#000',
@@ -60,27 +63,27 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 4,
   },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+  greetingBlock: {
+    paddingRight: BELL_SIZE + 12,
   },
-  greetingBlock: {},
   title: {
-    fontSize: 26,
+    fontSize: 20,
     fontWeight: '700',
     color: '#fff',
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 13,
     color: 'rgba(255,255,255,0.9)',
     marginTop: 2,
   },
   bellWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    position: 'absolute',
+    top: 8,
+    right: HORIZONTAL_PADDING,
+    width: BELL_SIZE,
+    height: BELL_SIZE,
+    borderRadius: BELL_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -19,6 +19,7 @@ import { CreateTopicDto } from './dto/create-topic.dto';
 import { UpdateTopicDto } from './dto/update-topic.dto';
 import { CreateSubtopicDto } from './dto/create-subtopic.dto';
 import { UpdateSubtopicDto } from './dto/update-subtopic.dto';
+import { BulkUploadInterviewPrepDto } from './dto/bulk-upload-interview-prep.dto';
 
 @ApiTags('Interview Prep (Admin)')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -31,6 +32,11 @@ export class InterviewPrepController {
   @Post('job-roles')
   createJobRole(@Body() dto: CreateJobRoleDto) {
     return this.interviewPrepService.createJobRole(dto);
+  }
+
+  @Post('bulk')
+  bulkCreate(@Body() dto: BulkUploadInterviewPrepDto) {
+    return this.interviewPrepService.bulkCreate(dto);
   }
 
   @Get('job-roles')

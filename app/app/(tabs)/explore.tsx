@@ -195,6 +195,9 @@ export default function ExploreScreen() {
   );
 
   const activitiesToShow: ActivityItem[] = useMemo(() => {
+    if (!isAuthenticated) {
+      return []; // When not logged in, show only real (empty) activity — no dummy data
+    }
     if (activities.length > 0) {
       return activities.map((a) => ({
         id: a.id,
@@ -204,7 +207,7 @@ export default function ExploreScreen() {
       }));
     }
     return fallbackActivities;
-  }, [activities, fallbackActivities, colors.success, colors.primary]);
+  }, [isAuthenticated, activities, fallbackActivities, colors.success, colors.primary]);
 
   return (
     <SafeAreaView

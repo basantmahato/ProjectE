@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Animated,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -182,7 +181,6 @@ export default function AttemptScreen() {
 
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
         <ScrollView contentContainerStyle={styles.resultScroll} showsVerticalScrollIndicator={false}>
           <View style={[styles.resultHero, { backgroundColor: colors.primary }]}>
             <Text style={styles.resultEmoji}>🎉</Text>
@@ -235,8 +233,6 @@ export default function AttemptScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
-
       <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.exitBtn}>
           <Text style={[styles.exitText, { color: colors.danger }]}>Exit</Text>

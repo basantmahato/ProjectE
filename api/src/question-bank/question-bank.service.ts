@@ -4,9 +4,13 @@ import { questionBank } from '../database/schema/questionBank.schema';
 import { eq } from 'drizzle-orm';
 import { CreateQuestionBankDto } from './dto/create-question-bank.dto';
 import { UpdateQuestionBankDto } from './dto/update-question-bank.dto';
+import { BulkUploadQuestionsDto } from './dto/bulk-upload-questions.dto';
+import { QuestionOptionsService } from '../question-options/question-options.service';
 
 @Injectable()
 export class QuestionBankService {
+  constructor(private readonly questionOptionsService: QuestionOptionsService) {}
+
   async create(dto: CreateQuestionBankDto) {
     const question = await db
       .insert(questionBank)
@@ -79,5 +83,44 @@ export class QuestionBankService {
     }
 
     return { message: 'Question deleted successfully' };
+  }
+
+  async bulkCreate(dto: BulkUploadQuestionsDto) {
+    const created = { questions: 0, options: 0 };
+    const errors: { index: number; message: string }[] = [];
+
+    for (let i = 0; i < dto.questions.length; i++) {
+      const q = dto.questions[i];
+      try {
+        const question = await this.create({
+          topicId: dto.topicId,
+          questionText: q.questionText,
+          difficulty: q.difficulty,
+          marks: q.marks,
+          negativeMarks: q.negativeMarks,
+          explanation: q.explanation,
+        });
+        created.questions += 1;
+
+        if (q.options?.length) {
+          for (const opt of q.options) {
+            await this.questionOptionsService.create({
+              questionId: question.id,
+              optionText: opt.optionText,
+              isCorrect: opt.isCorrect ?? false,
+            });
+            created.options += 1;
+          }
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        errors.push({ index: i, message });
+      }
+    }
+
+    return {
+      created,
+      errors: errors.length ? errors : undefined,
+    };
   }
 }

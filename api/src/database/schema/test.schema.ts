@@ -2,9 +2,8 @@ import { boolean, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg
 
 export const tests = pgTable("tests", {
   id: uuid("id").defaultRandom().primaryKey(),
-
+  slug: text("slug").notNull().unique(),
   title: text("title").notNull(),
-
   description: text("description"),
 
   durationMinutes: integer("duration_minutes").notNull(),

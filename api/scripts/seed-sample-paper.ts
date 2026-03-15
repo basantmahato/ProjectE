@@ -2,6 +2,8 @@ import "dotenv/config";
 import { eq } from "drizzle-orm";
 import { db } from "../src/database/db";
 import { samplePapers } from "../src/database/schema/samplePaper.schema";
+import { slugify } from "../src/common/slug.util";
+import { randomUUID } from "crypto";
 import { samplePaperSubjects } from "../src/database/schema/samplePaperSubject.schema";
 import { samplePaperTopics } from "../src/database/schema/samplePaperTopic.schema";
 import { samplePaperQuestions } from "../src/database/schema/samplePaperQuestion.schema";
@@ -123,9 +125,11 @@ async function seedSamplePaper() {
     return;
   }
 
+  const slug = `${slugify(SAMPLE_PAPER.title)}-${randomUUID().replace(/-/g, "").slice(0, 8)}`;
   const [inserted] = await db
     .insert(samplePapers)
     .values({
+      slug,
       title: SAMPLE_PAPER.title,
       description: SAMPLE_PAPER.description,
     })

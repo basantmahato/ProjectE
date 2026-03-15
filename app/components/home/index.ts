@@ -5,6 +5,7 @@ export { DashboardHeader } from './DashboardHeader';
 export { SearchBar } from './SearchBar';
 export { BalanceCard } from './BalanceCard';
 export { PointsCard } from './PointsCard';
+export type { LeaderboardEntry } from './PointsCard';
 export { StatCard } from './StatCard';
 export { LearningStatsSection } from './LearningStatsSection';
 export type { LearningStatItem } from './LearningStatsSection';
