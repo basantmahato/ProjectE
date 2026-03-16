@@ -5,6 +5,8 @@ import { eq } from "drizzle-orm";
 import * as bcrypt from "bcrypt";
 import { JwtService } from "@nestjs/jwt";
 import { OAuth2Client } from "google-auth-library";
+import { RegisterDto } from "./dto/register.dto";
+import { LoginDto } from "./dto/login.dto";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { ChangePasswordDto } from "./dto/change-password.dto";
 
@@ -13,7 +15,7 @@ export class AuthService {
 
   constructor(private jwtService: JwtService) {}
 
-  async register(data) {
+  async register(data: RegisterDto) {
     const existing = await db.select().from(users).where(eq(users.email, data.email));
   
     if (existing.length > 0) {
@@ -65,7 +67,7 @@ export class AuthService {
     return user;
   }
 
-  async login(data) {
+  async login(data: LoginDto) {
     const user = await this.validateUser(data.email, data.password);
     const payload = {
       sub: user.id,

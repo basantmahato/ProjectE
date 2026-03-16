@@ -1,6 +1,22 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+/** Backend paginated list response shape */
+export type PaginatedResponse<T> = {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+function unwrapPaginated<T>(r: { data: PaginatedResponse<T> | T[] }): T[] {
+  const body = r.data;
+  if (body && typeof body === 'object' && 'data' in body && Array.isArray((body as PaginatedResponse<T>).data))
+    return (body as PaginatedResponse<T>).data;
+  return Array.isArray(body) ? body : [];
+}
 
 export const api = axios.create({
   baseURL: API_BASE,
@@ -17,8 +33,13 @@ api.interceptors.response.use(
   (r) => r,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('admin_token');
-      window.location.href = '/login';
+      const isLoginRequest =
+        err.config?.url === '/auth/login' ||
+        (typeof err.config?.url === 'string' && err.config.url.includes('/auth/login'));
+      if (!isLoginRequest) {
+        localStorage.removeItem('admin_token');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(err);
   }
@@ -119,7 +140,8 @@ export type BulkUploadTestItem = {
   expiresAt?: string;
 };
 export const testsApi = {
-  list: () => api.get('/tests'),
+  list: (params?: { page?: number; limit?: number }) =>
+    api.get<PaginatedResponse<unknown>>('/tests', { params: params ?? {} }),
   get: (id: string) => api.get(`/tests/${id}`),
   getQuestions: (testId: string) => api.get(`/tests/${testId}/questions`),
   create: (data: { title: string; description?: string; durationMinutes: number; totalMarks: number; isPublished?: boolean; scheduledAt?: string; expiresAt?: string }) =>
@@ -131,8 +153,9 @@ export const testsApi = {
   delete: (id: string) => api.delete(`/tests/${id}`),
   addQuestion: (testId: string, questionId: string, questionOrder?: number) =>
     api.post(`/tests/${testId}/questions`, { questionId, questionOrder }),
-  removeQuestion: (testId: string, questionId: string) =>
-    api.delete(`/tests/${testId}/questions/${questionId}`),
+  /** id = test-question junction row id (backend route :testId/questions/:id) */
+  removeQuestion: (testId: string, testQuestionId: string) =>
+    api.delete(`/tests/${testId}/questions/${testQuestionId}`),
 };
 
 // Mock Tests
@@ -145,7 +168,8 @@ export type BulkUploadMockTestItem = {
   questionIds?: string[];
 };
 export const mockTestsApi = {
-  list: () => api.get('/mock-tests'),
+  list: (params?: { page?: number; limit?: number }) =>
+    api.get<PaginatedResponse<unknown>>('/mock-tests', { params: params ?? {} }),
   get: (id: string) => api.get(`/mock-tests/${id}`),
   getQuestions: (id: string) => api.get(`/mock-tests/${id}/questions`),
   create: (data: { title: string; description?: string; durationMinutes: number; totalMarks: number; isPublished?: boolean; scheduledAt?: string; expiresAt?: string }) =>
@@ -250,16 +274,18 @@ export const interviewPrepApi = {
 
 // Blog
 export const blogApi = {
-  list: () => api.get('/blog/admin/posts'),
+  list: (params?: { page?: number; limit?: number }) =>
+    api.get<PaginatedResponse<unknown>>('/blog/admin/posts', { params: params ?? {} }),
   get: (id: string) => api.get(`/blog/admin/posts/${id}`),
   create: (data: Record<string, unknown>) => api.post('/blog/admin/posts', data),
   update: (id: string, data: Record<string, unknown>) => api.patch(`/blog/admin/posts/${id}`, data),
   delete: (id: string) => api.delete(`/blog/admin/posts/${id}`),
 };
 
-// Notifications
+// Notifications (list returns { data, total, page, limit, totalPages })
 export const notificationsApi = {
-  list: () => api.get('/notifications'),
+  list: (params?: { page?: number; limit?: number }) =>
+    api.get<PaginatedResponse<{ id: string; title: string; body?: string; type?: string; createdAt?: string }>>('/notifications', { params: params ?? {} }),
   get: (id: string) => api.get(`/notifications/${id}`),
   create: (data: { title: string; body?: string; type?: string }) => api.post('/notifications', data),
   update: (id: string, data: { title?: string; body?: string; type?: string }) =>
@@ -283,7 +309,20 @@ export const notesApi = {
   delete: (noteId: string) => api.delete(`/notes/admin/notes/${noteId}`),
 };
 
-// Dashboard
-export const dashboardApi = {
-  stats: () => api.get('/dashbaord'),
+// Dashboard (backend returns same keys including blogPosts)
+export type AdminStats = {
+  users: number;
+  subjects: number;
+  topics: number;
+  questions: number;
+  tests: number;
+  mockTests: number;
+  blogPosts: number;
+  notifications: number;
 };
+export const dashboardApi = {
+  stats: () => api.get('/dashboard'),
+  adminStats: () => api.get<AdminStats>('/dashboard/admin-stats'),
+};
+
+export { unwrapPaginated };

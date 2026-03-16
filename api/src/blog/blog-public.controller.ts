@@ -9,7 +9,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/jwt-auth.gaurd';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { BlogService } from './blog.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { CreateReplyDto } from './dto/create-reply.dto';

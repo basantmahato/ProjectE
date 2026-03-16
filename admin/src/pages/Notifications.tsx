@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { notificationsApi } from '../lib/api';
+import { notificationsApi, unwrapPaginated } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 
@@ -32,7 +32,7 @@ export function Notifications() {
 
   const { data: list, isLoading, isError, refetch } = useQuery({
     queryKey: ['notifications'],
-    queryFn: () => notificationsApi.list().then((r) => r.data),
+    queryFn: () => notificationsApi.list().then((r) => unwrapPaginated(r)),
   });
 
   const form = useForm<FormData>({

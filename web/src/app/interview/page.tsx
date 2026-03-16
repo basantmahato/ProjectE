@@ -1,28 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
-import {
-  getInterviewPrepList,
-  type InterviewPrepJobRole,
-} from "@/lib/api";
+import { useInterviewPrepList } from "@/hooks/queries";
 
 const ICONS = ["code", "groups", "psychology", "business_center"];
 
 export default function InterviewPage() {
-  const [roles, setRoles] = useState<InterviewPrepJobRole[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    getInterviewPrepList()
-      .then((data) => setRoles(Array.isArray(data) ? data : []))
-      .catch((err) =>
-        setError(err instanceof Error ? err.message : "Failed to load interview prep")
-      )
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: rolesRaw, isPending: loading, error: queryError } = useInterviewPrepList();
+  const roles = Array.isArray(rolesRaw) ? rolesRaw : [];
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load interview prep") : null;
 
   return (
     <PageLayout

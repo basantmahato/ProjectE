@@ -1,21 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { getPublishedMockTests, type Test } from "@/lib/api";
+import { usePublishedMockTests } from "@/hooks/queries";
 
 export default function MoctestPage() {
-  const [tests, setTests] = useState<Test[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    getPublishedMockTests()
-      .then((data) => setTests(Array.isArray(data) ? data : []))
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load mock tests"))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: testsRaw, isPending: loading, error: queryError } = usePublishedMockTests();
+  const tests = Array.isArray(testsRaw) ? testsRaw : [];
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load mock tests") : null;
 
   return (
     <PageLayout

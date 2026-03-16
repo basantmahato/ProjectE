@@ -8,7 +8,7 @@ import { blogPosts } from '../database/schema/blogPost.schema';
 import { blogComments } from '../database/schema/blogComment.schema';
 import { blogCommentReplies } from '../database/schema/blogCommentReply.schema';
 import { users } from '../database/schema/user.schema';
-import { eq, desc, and, asc, sql } from 'drizzle-orm';
+import { eq, desc, and, asc, sql, inArray } from 'drizzle-orm';
 import { slugify, ensureUniqueSlug } from '../common/slug.util';
 import { CreateBlogPostDto } from './dto/create-blog-post.dto';
 import { UpdateBlogPostDto } from './dto/update-blog-post.dto';
@@ -64,11 +64,24 @@ export class BlogService {
     return post;
   }
 
-  async findAllPostsAdmin() {
-    return db
+  async findAllPostsAdmin(page = 1, limit = 20) {
+    const pageNum = Math.max(1, page);
+    const limitNum = Math.min(50, Math.max(1, limit));
+    const offset = (pageNum - 1) * limitNum;
+
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(blogPosts);
+
+    const total = countResult?.count ?? 0;
+    const data = await db
       .select()
       .from(blogPosts)
-      .orderBy(desc(blogPosts.createdAt));
+      .orderBy(desc(blogPosts.createdAt))
+      .limit(limitNum)
+      .offset(offset);
+
+    return { data, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) || 1 };
   }
 
   async findOnePostAdmin(id: string) {
@@ -227,19 +240,23 @@ export class BlogService {
       .where(eq(blogComments.postId, postId))
       .orderBy(asc(blogComments.createdAt));
 
-    const replies = await db
-      .select({
-        id: blogCommentReplies.id,
-        commentId: blogCommentReplies.commentId,
-        userId: blogCommentReplies.userId,
-        content: blogCommentReplies.content,
-        createdAt: blogCommentReplies.createdAt,
-        userName: users.name,
-        userEmail: users.email,
-      })
-      .from(blogCommentReplies)
-      .leftJoin(users, eq(blogCommentReplies.userId, users.id))
-      .orderBy(asc(blogCommentReplies.createdAt));
+    const commentIds = comments.map((c) => c.id);
+    const replies = commentIds.length > 0
+      ? await db
+          .select({
+            id: blogCommentReplies.id,
+            commentId: blogCommentReplies.commentId,
+            userId: blogCommentReplies.userId,
+            content: blogCommentReplies.content,
+            createdAt: blogCommentReplies.createdAt,
+            userName: users.name,
+            userEmail: users.email,
+          })
+          .from(blogCommentReplies)
+          .leftJoin(users, eq(blogCommentReplies.userId, users.id))
+          .where(inArray(blogCommentReplies.commentId, commentIds))
+          .orderBy(asc(blogCommentReplies.createdAt))
+      : [];
 
     const replyMap = new Map<string, typeof replies>();
     for (const r of replies) {

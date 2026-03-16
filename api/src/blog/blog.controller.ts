@@ -8,10 +8,11 @@ import {
   Delete,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/jwt-auth.gaurd';
-import { RolesGuard } from '../auth/roles.gaurd';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
 import { Role } from '../auth/decorators/roles.decorator';
 import { BlogService } from './blog.service';
 import { CreateBlogPostDto } from './dto/create-blog-post.dto';
@@ -33,8 +34,11 @@ export class BlogController {
   }
 
   @Get('admin/posts')
-  findAllPosts() {
-    return this.blogService.findAllPostsAdmin();
+  findAllPosts(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.blogService.findAllPostsAdmin(
+      page ? Number(page) : 1,
+      limit ? Number(limit) : 20,
+    );
   }
 
   @Get('admin/posts/:id')

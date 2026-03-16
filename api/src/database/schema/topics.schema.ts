@@ -6,7 +6,7 @@ export const topics = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     subjectId: uuid("subject_id")
-      .references(() => subjects.id)
+      .references(() => subjects.id, { onDelete: "cascade" })
       .notNull(),
     slug: text("slug").notNull(),
     name: text("name").notNull(),

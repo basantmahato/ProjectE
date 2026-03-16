@@ -9,14 +9,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.gaurd';
-import { RolesGuard } from 'src/auth/roles.gaurd';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
 import { Role } from 'src/auth/decorators/roles.decorator';
 import { InterviewPrepService } from './interview-prep.service';
 import { CreateJobRoleDto } from './dto/create-job-role.dto';
 import { UpdateJobRoleDto } from './dto/update-job-role.dto';
-import { CreateTopicDto } from './dto/create-topic.dto';
-import { UpdateTopicDto } from './dto/update-topic.dto';
+import { CreateInterviewPrepTopicDto } from './dto/create-topic.dto';
+import { UpdateInterviewPrepTopicDto } from './dto/update-topic.dto';
 import { CreateSubtopicDto } from './dto/create-subtopic.dto';
 import { UpdateSubtopicDto } from './dto/update-subtopic.dto';
 import { BulkUploadInterviewPrepDto } from './dto/bulk-upload-interview-prep.dto';
@@ -66,7 +66,7 @@ export class InterviewPrepController {
   @Post('job-roles/:roleId/topics')
   createTopic(
     @Param('roleId') roleId: string,
-    @Body() dto: CreateTopicDto,
+    @Body() dto: CreateInterviewPrepTopicDto,
   ) {
     return this.interviewPrepService.createTopic(roleId, dto);
   }
@@ -79,7 +79,7 @@ export class InterviewPrepController {
   @Patch('job-roles/:roleId/topics/:topicId')
   updateTopic(
     @Param('topicId') topicId: string,
-    @Body() dto: UpdateTopicDto,
+    @Body() dto: UpdateInterviewPrepTopicDto,
   ) {
     return this.interviewPrepService.updateTopic(topicId, dto);
   }

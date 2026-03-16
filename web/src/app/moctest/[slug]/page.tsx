@@ -1,44 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  getPublishedMockTest,
-  getPublishedMockTestBySlug,
-  startAttempt,
-  type Test,
-} from "@/lib/api";
-
-function isUuid(s: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
-}
+import { usePublishedMockTest } from "@/hooks/queries";
+import { startAttempt } from "@/lib/api";
 
 export default function MockTestDetailPage() {
   const params = useParams();
   const router = useRouter();
   const slug = typeof params.slug === "string" ? params.slug : "";
   const { isLoggedIn } = useAuth();
-  const [test, setTest] = useState<Test | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: test, isPending: loading, error: queryError } = usePublishedMockTest(slug);
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load mock test") : null;
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!slug) return;
-    const fetchTest = isUuid(slug)
-      ? getPublishedMockTest(slug)
-      : getPublishedMockTestBySlug(slug);
-    fetchTest
-      .then(setTest)
-      .catch((err) =>
-        setError(err instanceof Error ? err.message : "Failed to load mock test")
-      )
-      .finally(() => setLoading(false));
-  }, [slug]);
 
   const handleStartTest = async () => {
     if (!test || starting) return;

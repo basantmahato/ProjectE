@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { mockTestsApi, questionBankApi, type BulkUploadMockTestItem } from '../lib/api';
+import { mockTestsApi, questionBankApi, unwrapPaginated, type BulkUploadMockTestItem } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 
@@ -38,7 +38,7 @@ export function MockTests() {
   const toast = useToast();
   const { data: tests, isLoading, isError, refetch } = useQuery({
     queryKey: ['mock-tests'],
-    queryFn: () => mockTestsApi.list().then((r) => r.data),
+    queryFn: () => mockTestsApi.list().then((r) => unwrapPaginated(r as { data: unknown })),
   });
   const { data: testQuestions } = useQuery({
     queryKey: ['mock-tests', manageId, 'questions'],

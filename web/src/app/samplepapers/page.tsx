@@ -1,12 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
-import {
-  getSamplePapersList,
-  type SamplePaperListItem,
-} from "@/lib/api";
+import { useSamplePapersList } from "@/hooks/queries";
 
 function formatDate(value: string | null | undefined): string {
   if (!value) return "";
@@ -21,18 +17,9 @@ function formatDate(value: string | null | undefined): string {
 }
 
 export default function SamplepapersPage() {
-  const [papers, setPapers] = useState<SamplePaperListItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    getSamplePapersList()
-      .then((data) => setPapers(Array.isArray(data) ? data : []))
-      .catch((err) =>
-        setError(err instanceof Error ? err.message : "Failed to load sample papers")
-      )
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: papersRaw, isPending: loading, error: queryError } = useSamplePapersList();
+  const papers = Array.isArray(papersRaw) ? papersRaw : [];
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load sample papers") : null;
 
   return (
     <PageLayout

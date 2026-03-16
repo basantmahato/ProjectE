@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { blogApi } from '../lib/api';
+import { blogApi, unwrapPaginated } from '../lib/api';
 import { slugify } from '../lib/slug';
 import { useToast } from '../contexts/ToastContext';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -40,7 +40,7 @@ export function Blog() {
 
   const { data: posts, isLoading, isError, refetch } = useQuery({
     queryKey: ['blog'],
-    queryFn: () => blogApi.list().then((r) => r.data),
+    queryFn: () => blogApi.list().then((r) => unwrapPaginated(r as { data: unknown })),
   });
 
   const { data: editPost, isLoading: isLoadingEdit } = useQuery({

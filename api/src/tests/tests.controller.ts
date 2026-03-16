@@ -7,6 +7,7 @@ import {
   Patch,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { TestsService } from './tests.service';
 import { TestQuestionsService } from './test-questions.service';
@@ -15,8 +16,8 @@ import { UpdateTestDto } from './dto/update-test.dto';
 import { AddQuestionToTestDto } from './dto/add-question-to-test.dto';
 import { BulkUploadTestsDto } from './dto/bulk-upload-tests.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.gaurd';
-import { RolesGuard } from 'src/auth/roles.gaurd';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
 import { Role } from 'src/auth/decorators/roles.decorator';
 
 @ApiTags('Tests')
@@ -40,8 +41,11 @@ export class TestsController {
   }
 
   @Get()
-  findAll() {
-    return this.testsService.findAll();
+  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.testsService.findAll(
+      page ? Number(page) : 1,
+      limit ? Number(limit) : 20,
+    );
   }
 
   @Get(':testId/questions')

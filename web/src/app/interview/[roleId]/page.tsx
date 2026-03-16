@@ -1,34 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { getInterviewPrepRole } from "@/lib/api";
+import { useInterviewPrepRole } from "@/hooks/queries";
 
 export default function InterviewRolePage() {
   const params = useParams();
   const roleId = typeof params.roleId === "string" ? params.roleId : "";
-  const [data, setData] = useState<unknown>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [planRequired, setPlanRequired] = useState(false);
-
-  useEffect(() => {
-    if (!roleId) return;
-    getInterviewPrepRole(roleId)
-      .then(setData)
-      .catch((err) => {
-        const msg = err instanceof Error ? err.message : "Failed to load";
-        setError(msg);
-        setPlanRequired(
-          msg.includes("Upgrade") ||
-            msg.includes("plan") ||
-            msg.includes("PLAN_UPGRADE")
-        );
-      })
-      .finally(() => setLoading(false));
-  }, [roleId]);
+  const { data, isPending: loading, error: queryError } = useInterviewPrepRole(roleId);
+  const errorMsg = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load") : null;
+  const error = errorMsg;
+  const planRequired = errorMsg
+    ? errorMsg.includes("Upgrade") || errorMsg.includes("plan") || errorMsg.includes("PLAN_UPGRADE")
+    : false;
 
   if (!roleId) {
     return (

@@ -90,11 +90,12 @@ export function initAndRenderGoogleButton(
       if (response?.credential) onCredential(response.credential);
     },
   });
+  const width = Math.max(container.offsetWidth || 0, 280);
   window.google.accounts.id.renderButton(container, {
     type: "standard",
     theme: options?.theme ?? "outline",
     size: options?.size ?? "large",
     text: "continue_with",
-    width: container.offsetWidth || 320,
+    width,
   });
 }

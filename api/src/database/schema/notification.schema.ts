@@ -33,3 +33,15 @@ export const userPushTokens = pgTable("user_push_tokens", {
   deviceId: varchar("device_id", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+/** Web Push subscriptions for browser notifications (VAPID). */
+export const userWebPushSubscriptions = pgTable("user_web_push_subscriptions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  endpoint: varchar("endpoint", { length: 1024 }).notNull().unique(),
+  p256dh: varchar("p256dh", { length: 512 }).notNull(),
+  auth: varchar("auth", { length: 256 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

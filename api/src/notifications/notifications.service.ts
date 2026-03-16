@@ -1,17 +1,54 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { db } from "../database/db";
 import {
   notifications,
   userNotificationRead,
   userPushTokens,
+  userWebPushSubscriptions,
 } from "../database/schema/notification.schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
+import * as webPush from "web-push";
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 const BATCH_SIZE = 100;
+const WEB_PUSH_DEFAULT_URL = "/notifications";
 
 @Injectable()
 export class NotificationsService {
+  private readonly logger = new Logger(NotificationsService.name);
+
+  getVapidPublicKey(): string | null {
+    const key = process.env.VAPID_PUBLIC_KEY?.trim();
+    return key || null;
+  }
+
+  async registerWebPushSubscription(
+    userId: string,
+    endpoint: string,
+    p256dh: string,
+    auth: string,
+  ): Promise<{ ok: boolean }> {
+    const existing = await db
+      .select()
+      .from(userWebPushSubscriptions)
+      .where(eq(userWebPushSubscriptions.endpoint, endpoint));
+
+    if (existing.length > 0) {
+      await db
+        .update(userWebPushSubscriptions)
+        .set({ userId, p256dh, auth, createdAt: new Date() })
+        .where(eq(userWebPushSubscriptions.endpoint, endpoint));
+    } else {
+      await db.insert(userWebPushSubscriptions).values({
+        userId,
+        endpoint,
+        p256dh,
+        auth,
+      });
+    }
+    return { ok: true };
+  }
+
   async registerPushToken(
     userId: string,
     expoPushToken: string,
@@ -37,11 +74,22 @@ export class NotificationsService {
     return { ok: true };
   }
 
-  async findAll(userId?: string | null) {
+  async findAll(userId?: string | null, page = 1, limit = 20) {
+    const pageNum = Math.max(1, page);
+    const limitNum = Math.min(50, Math.max(1, limit));
+    const offset = (pageNum - 1) * limitNum;
+
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(notifications);
+    const total = countResult?.count ?? 0;
+
     const rows = await db
       .select()
       .from(notifications)
-      .orderBy(desc(notifications.createdAt));
+      .orderBy(desc(notifications.createdAt))
+      .limit(limitNum)
+      .offset(offset);
 
     let readSet: Set<string> = new Set();
     if (userId && rows.length > 0) {
@@ -52,7 +100,7 @@ export class NotificationsService {
       readSet = new Set(readRows.map((r) => r.notificationId));
     }
 
-    return rows.map((row) => {
+    const data = rows.map((row) => {
       const createdAt = row.createdAt ?? (row as unknown as { created_at?: Date }).created_at;
       return {
         id: row.id,
@@ -64,6 +112,14 @@ export class NotificationsService {
         read: userId ? readSet.has(row.id) : false,
       };
     });
+
+    return {
+      data,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum) || 1,
+    };
   }
 
   async markAsRead(userId: string, notificationId: string): Promise<void> {
@@ -134,13 +190,27 @@ export class NotificationsService {
       .from(userPushTokens)
       .where(eq(userPushTokens.userId, userId));
 
-    const pushed = await this.sendPushToTokens(
+    const pushedExpo = await this.sendPushToTokens(
       tokens.map((t) => t.expoPushToken),
       title,
       body ?? "",
     );
 
-    return { id: created.id, pushed };
+    const webSubs = await db
+      .select({
+        endpoint: userWebPushSubscriptions.endpoint,
+        p256dh: userWebPushSubscriptions.p256dh,
+        auth: userWebPushSubscriptions.auth,
+      })
+      .from(userWebPushSubscriptions)
+      .where(eq(userWebPushSubscriptions.userId, userId));
+    const pushedWeb = await this.sendWebPushToSubscriptions(
+      webSubs,
+      title,
+      body ?? "",
+    );
+
+    return { id: created.id, pushed: pushedExpo + pushedWeb };
   }
 
   async createAndSend(
@@ -161,13 +231,26 @@ export class NotificationsService {
       .select({ expoPushToken: userPushTokens.expoPushToken })
       .from(userPushTokens);
 
-    const pushed = await this.sendPushToTokens(
+    const pushedExpo = await this.sendPushToTokens(
       tokens.map((t) => t.expoPushToken),
       title,
       body ?? "",
     );
 
-    return { id: created.id, pushed };
+    const webSubs = await db
+      .select({
+        endpoint: userWebPushSubscriptions.endpoint,
+        p256dh: userWebPushSubscriptions.p256dh,
+        auth: userWebPushSubscriptions.auth,
+      })
+      .from(userWebPushSubscriptions);
+    const pushedWeb = await this.sendWebPushToSubscriptions(
+      webSubs,
+      title,
+      body ?? "",
+    );
+
+    return { id: created.id, pushed: pushedExpo + pushedWeb };
   }
 
   private async sendPushToTokens(
@@ -198,7 +281,7 @@ export class NotificationsService {
 
         if (!res.ok) {
           const text = await res.text();
-          console.error("[NotificationsService] Expo push error:", res.status, text);
+          this.logger.error(`Expo push error: ${res.status} ${text}`);
           continue;
         }
 
@@ -212,10 +295,53 @@ export class NotificationsService {
           successCount += chunk.length;
         }
       } catch (err) {
-        console.error("[NotificationsService] Expo push request failed:", err);
+        this.logger.error("Expo push request failed", err instanceof Error ? err.stack : String(err));
       }
     }
 
+    return successCount;
+  }
+
+  private async sendWebPushToSubscriptions(
+    subscriptions: { endpoint: string; p256dh: string; auth: string }[],
+    title: string,
+    body: string,
+    url: string = WEB_PUSH_DEFAULT_URL,
+  ): Promise<number> {
+    if (subscriptions.length === 0) return 0;
+    const publicKey = process.env.VAPID_PUBLIC_KEY;
+    const privateKey = process.env.VAPID_PRIVATE_KEY;
+    if (!publicKey || !privateKey) {
+      this.logger.warn("Web push skipped: VAPID keys not set");
+      return 0;
+    }
+    try {
+      webPush.setVapidDetails(
+        "mailto:admin@example.com",
+        publicKey,
+        privateKey,
+      );
+    } catch (err) {
+      this.logger.error("Web push VAPID setup failed", err instanceof Error ? err.stack : String(err));
+      return 0;
+    }
+
+    const payload = JSON.stringify({ title, body, url });
+    let successCount = 0;
+    for (const sub of subscriptions) {
+      try {
+        await webPush.sendNotification(
+          {
+            endpoint: sub.endpoint,
+            keys: { p256dh: sub.p256dh, auth: sub.auth },
+          },
+          payload,
+        );
+        successCount += 1;
+      } catch (err) {
+        this.logger.warn(`Web push failed for endpoint: ${sub.endpoint?.slice(0, 50)}`);
+      }
+    }
     return successCount;
   }
 }

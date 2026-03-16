@@ -60,7 +60,7 @@ export default function HomeScreen() {
       setTestsTakenCount(0);
       setUserRank(null);
       api
-        .get<LeaderboardEntry[]>('/dashbaord/leaderboard')
+        .get<LeaderboardEntry[]>('/dashboard/leaderboard')
         .then((res) => {
           const list = Array.isArray(res.data) ? res.data : [];
           setTop3Leaderboard(list.slice(0, 3));
@@ -72,9 +72,9 @@ export default function HomeScreen() {
     setStatsLoading(true);
     const currentUserId = user?.id;
     Promise.all([
-      api.get<{ totalMarks: number; accuracyPercent: number }>('/dashbaord'),
+      api.get<{ totalMarks: number; accuracyPercent: number }>('/dashboard'),
       api.get<{ testId: string; submittedAt: string | null }[]>('/attempts'),
-      api.get<LeaderboardEntry[]>('/dashbaord/leaderboard'),
+      api.get<LeaderboardEntry[]>('/dashboard/leaderboard'),
     ])
       .then(([dashboardRes, attemptsRes, leaderboardRes]) => {
         setTotalMarks(dashboardRes.data.totalMarks ?? 0);

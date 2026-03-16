@@ -1,19 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  getBlogPost,
-  getBlogPostBySlug,
-  getPostComments,
-  addPostComment,
-  addCommentReply,
-  type BlogPost,
-  type BlogComment,
-} from "@/lib/api";
+import { useBlogPost, usePostComments } from "@/hooks/queries";
+import { addPostComment, addCommentReply } from "@/lib/api";
 
 function formatDate(value: string | null | undefined): string {
   if (!value) return "";
@@ -38,40 +32,19 @@ export default function BlogPostPage() {
   const params = useParams();
   const slug = typeof params.slug === "string" ? params.slug : "";
   const { isLoggedIn } = useAuth();
-  const [post, setPost] = useState<BlogPost | null>(null);
-  const [comments, setComments] = useState<BlogComment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { data: post, isPending: loading, error: postError } = useBlogPost(slug);
+  const { data: commentsRaw } = usePostComments(post?.id);
+  const comments = Array.isArray(commentsRaw) ? commentsRaw : [];
+  const error = postError ? (postError instanceof Error ? postError.message : "Failed to load post") : null;
   const [commentText, setCommentText] = useState("");
   const [replyTextByCommentId, setReplyTextByCommentId] = useState<Record<string, string>>({});
   const [submittingComment, setSubmittingComment] = useState(false);
   const [submittingReplyId, setSubmittingReplyId] = useState<string | null>(null);
 
-  const fetchComments = useCallback(() => {
-    if (!post?.id) return;
-    getPostComments(post.id)
-      .then((c) => setComments(Array.isArray(c) ? c : []))
-      .catch(() => setComments([]));
-  }, [post?.id]);
-
-  const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
-
-  useEffect(() => {
-    if (!slug) return;
-    const fetchPost = isUuid(slug) ? getBlogPost(slug) : getBlogPostBySlug(slug);
-    fetchPost
-      .then((p) => {
-        setPost(p);
-        return getPostComments(p.id);
-      })
-      .then((c) => setComments(Array.isArray(c) ? c : []))
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load post"))
-      .finally(() => setLoading(false));
-  }, [slug]);
-
-  useEffect(() => {
-    if (post?.id) fetchComments();
-  }, [post?.id, fetchComments]);
+  const fetchComments = () => {
+    if (post?.id) queryClient.invalidateQueries({ queryKey: ["blogs", "comments", post.id] });
+  };
 
   if (!slug) {
     return (
@@ -193,7 +166,7 @@ export default function BlogPostPage() {
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{c.content}</p>
                 {c.replies?.length > 0 && (
                   <ul className="mt-3 ml-4 space-y-2 border-l-2 border-slate-200 pl-4 dark:border-[var(--navy-700)]">
-                    {c.replies.map((r) => (
+                    {(c.replies ?? []).map((r) => (
                       <li key={r.id}>
                         <p className="text-sm font-medium text-[var(--navy-900)] dark:text-white">
                           {r.userName ?? "Anonymous"}

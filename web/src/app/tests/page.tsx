@@ -1,25 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { getPublishedTests, getUpcomingTests, type Test } from "@/lib/api";
+import { usePublishedTests, useUpcomingTests } from "@/hooks/queries";
 
 export default function TestsPage() {
-  const [published, setPublished] = useState<Test[]>([]);
-  const [upcoming, setUpcoming] = useState<Test[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    Promise.all([getPublishedTests(), getUpcomingTests()])
-      .then(([p, u]) => {
-        setPublished(Array.isArray(p) ? p : []);
-        setUpcoming(Array.isArray(u) ? u : []);
-      })
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load tests"))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: publishedRaw, isPending: pubLoading, error: pubError } = usePublishedTests();
+  const { data: upcomingRaw, isPending: upLoading } = useUpcomingTests();
+  const published = Array.isArray(publishedRaw) ? publishedRaw : [];
+  const upcoming = Array.isArray(upcomingRaw) ? upcomingRaw : [];
+  const loading = pubLoading || upLoading;
+  const error = pubError ? (pubError instanceof Error ? pubError.message : "Failed to load tests") : null;
 
   return (
     <PageLayout

@@ -8,8 +8,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/jwt-auth.gaurd';
-import { RolesGuard } from '../auth/roles.gaurd';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
 import { Role } from '../auth/decorators/roles.decorator';
 import { NotesService } from './notes.service';
 import { CreateNoteDto } from './dto/create-note.dto';

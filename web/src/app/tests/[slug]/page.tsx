@@ -1,35 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/hooks/useAuth";
-import { getPublishedTest, getPublishedTestBySlug, startAttempt, type Test } from "@/lib/api";
-
-function isUuid(s: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
-}
+import { usePublishedTest } from "@/hooks/queries";
+import { startAttempt } from "@/lib/api";
 
 export default function TestDetailPage() {
   const params = useParams();
   const router = useRouter();
   const slug = typeof params.slug === "string" ? params.slug : "";
   const { isLoggedIn } = useAuth();
-  const [test, setTest] = useState<Test | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: test, isPending: loading, error: queryError } = usePublishedTest(slug);
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load test") : null;
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!slug) return;
-    const fetchTest = isUuid(slug) ? getPublishedTest(slug) : getPublishedTestBySlug(slug);
-    fetchTest
-      .then(setTest)
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load test"))
-      .finally(() => setLoading(false));
-  }, [slug]);
 
   const handleStartTest = async () => {
     if (!test || starting) return;

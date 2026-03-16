@@ -4,22 +4,22 @@ import { notifications } from "../src/database/schema/notification.schema";
 
 const SAMPLE_NOTIFICATIONS = [
   {
-    title: "XXX",
+    title: "Welcome",
     body: "Thanks for signing up. Explore mock tests, sample papers, and interview prep to get started.",
     type: "info",
   },
   {
-    title: "XX mock teXXXXst XX",
+    title: "New mock test",
     body: "A new full-length mock test has been added. Give it a try from the Tests section.",
     type: "success",
   },
   {
-    title: "ScheduXXXled tesXXXX reminder",
+    title: "Scheduled test reminder",
     body: "Your scheduled test starts in 30 minutes. Make sure you're in a quiet place with a stable connection.",
     type: "warning",
   },
   {
-    title: "PreXXXXmium plan updatedXXX XXXXX",
+    title: "Premium plan updated",
     body: "Your subscription is now active. You have full access to all features.",
     type: "transaction",
   },

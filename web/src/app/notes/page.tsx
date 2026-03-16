@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { getNoteSubjects, type Subject } from "@/lib/api";
+import { useNoteSubjects } from "@/hooks/queries";
+import type { Subject } from "@/lib/api";
 
 const ICONS: Record<string, string> = {
   Mathematics: "calculate",
@@ -14,16 +14,9 @@ const ICONS: Record<string, string> = {
 };
 
 export default function NotesPage() {
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    getNoteSubjects()
-      .then(setSubjects)
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load subjects"))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: subjectsRaw, isPending: loading, error: queryError } = useNoteSubjects();
+  const subjects = Array.isArray(subjectsRaw) ? subjectsRaw : [];
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load subjects") : null;
 
   return (
     <PageLayout

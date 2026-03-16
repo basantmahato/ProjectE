@@ -238,6 +238,22 @@ export class AttemptsService {
       }
     }
 
+    const existing = await db
+      .select({ id: answers.id })
+      .from(answers)
+      .where(
+        and(eq(answers.attemptId, attemptId), eq(answers.questionId, questionId)),
+      );
+
+    if (existing.length > 0) {
+      const [updated] = await db
+        .update(answers)
+        .set({ selectedOptionId: selectedOptionId ?? null, isCorrect })
+        .where(eq(answers.id, existing[0].id))
+        .returning();
+      return updated;
+    }
+
     const [answer] = await db
       .insert(answers)
       .values({
@@ -305,5 +321,82 @@ export class AttemptsService {
     }
 
     return updated;
+  }
+
+  async getAttemptResult(
+    attemptId: string,
+    userId: string | null,
+    deviceId: string | null,
+  ) {
+    const attempt = await this.findOne(attemptId, userId, deviceId);
+    if (!attempt.submittedAt) {
+      throw new BadRequestException('Attempt not submitted yet');
+    }
+
+    const attemptAnswers = await db
+      .select({
+        questionId: answers.questionId,
+        selectedOptionId: answers.selectedOptionId,
+        isCorrect: answers.isCorrect,
+      })
+      .from(answers)
+      .where(eq(answers.attemptId, attemptId));
+
+    if (attemptAnswers.length === 0) {
+      return [];
+    }
+
+    const questionIds = attemptAnswers.map((a) => a.questionId);
+    const questions = await db
+      .select({
+        id: questionBank.id,
+        questionText: questionBank.questionText,
+        explanation: questionBank.explanation,
+        marks: questionBank.marks,
+      })
+      .from(questionBank)
+      .where(inArray(questionBank.id, questionIds));
+
+    const questionMap = Object.fromEntries(questions.map((q) => [q.id, q]));
+
+    const allOptions = await db
+      .select({
+        id: questionOptions.id,
+        questionId: questionOptions.questionId,
+        optionText: questionOptions.optionText,
+        isCorrect: questionOptions.isCorrect,
+      })
+      .from(questionOptions)
+      .where(inArray(questionOptions.questionId, questionIds));
+
+    const correctByQuestion = new Map<string | null, { id: string; optionText: string }>();
+    for (const opt of allOptions) {
+      if (opt.isCorrect) {
+        correctByQuestion.set(opt.questionId, { id: opt.id, optionText: opt.optionText });
+      }
+    }
+    const selectedByOption = new Map<string, { optionText: string }>();
+    for (const opt of allOptions) {
+      selectedByOption.set(opt.id, { optionText: opt.optionText });
+    }
+
+    return attemptAnswers.map((a) => {
+      const q = questionMap[a.questionId];
+      const correct = correctByQuestion.get(a.questionId);
+      const selectedText = a.selectedOptionId
+        ? selectedByOption.get(a.selectedOptionId)?.optionText ?? null
+        : null;
+      return {
+        questionId: a.questionId,
+        questionText: q?.questionText ?? '',
+        explanation: q?.explanation ?? null,
+        marks: q?.marks ?? null,
+        selectedOptionId: a.selectedOptionId ?? null,
+        selectedOptionText: selectedText,
+        isCorrect: a.isCorrect ?? false,
+        correctOptionId: correct?.id ?? null,
+        correctOptionText: correct?.optionText ?? null,
+      };
+    });
   }
 }

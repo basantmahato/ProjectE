@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { getBlogPostsPaginated, type BlogPostListItem } from "@/lib/api";
+import { useBlogPostsPaginated } from "@/hooks/queries";
 
 const POSTS_PER_PAGE = 9;
 
@@ -21,35 +21,12 @@ function formatDate(value: string | null | undefined): string {
 }
 
 export default function BlogsPage() {
-  const [posts, setPosts] = useState<BlogPostListItem[]>([]);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-    getBlogPostsPaginated(page, POSTS_PER_PAGE)
-      .then((res) => {
-        // Support both paginated { data, total, totalPages } and legacy array response
-        const list = Array.isArray(res) ? res : (res?.data ?? []);
-        const listSafe = Array.isArray(list) ? list : [];
-        setPosts(listSafe);
-        if (typeof res === "object" && res !== null && !Array.isArray(res)) {
-          setTotalPages((res as { totalPages?: number }).totalPages ?? 1);
-          setTotal((res as { total?: number }).total ?? listSafe.length);
-        } else {
-          setTotalPages(1);
-          setTotal(listSafe.length);
-        }
-      })
-      .catch((err) =>
-        setError(err instanceof Error ? err.message : "Failed to load posts"),
-      )
-      .finally(() => setLoading(false));
-  }, [page]);
+  const { data: result, isPending: loading, error: queryError } = useBlogPostsPaginated(page, POSTS_PER_PAGE);
+  const posts = result?.data ?? [];
+  const totalPages = result?.totalPages ?? 1;
+  const total = result?.total ?? 0;
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load posts") : null;
 
   const hasPrev = page > 1;
   const hasNext = page < totalPages;

@@ -6,8 +6,8 @@ import { interviewPrepSubtopics } from '../database/schema/interviewPrepSubtopic
 import { eq, asc } from 'drizzle-orm';
 import { CreateJobRoleDto } from './dto/create-job-role.dto';
 import { UpdateJobRoleDto } from './dto/update-job-role.dto';
-import { CreateTopicDto } from './dto/create-topic.dto';
-import { UpdateTopicDto } from './dto/update-topic.dto';
+import { CreateInterviewPrepTopicDto } from './dto/create-topic.dto';
+import { UpdateInterviewPrepTopicDto } from './dto/update-topic.dto';
 import { CreateSubtopicDto } from './dto/create-subtopic.dto';
 import { UpdateSubtopicDto } from './dto/update-subtopic.dto';
 import { BulkUploadInterviewPrepDto } from './dto/bulk-upload-interview-prep.dto';
@@ -65,7 +65,7 @@ export class InterviewPrepService {
   }
 
   // --- Topics ---
-  async createTopic(jobRoleId: string, dto: CreateTopicDto) {
+  async createTopic(jobRoleId: string, dto: CreateInterviewPrepTopicDto) {
     await this.findOneJobRole(jobRoleId);
     const [topic] = await db
       .insert(interviewPrepTopics)
@@ -97,7 +97,7 @@ export class InterviewPrepService {
     return t;
   }
 
-  async updateTopic(topicId: string, dto: UpdateTopicDto) {
+  async updateTopic(topicId: string, dto: UpdateInterviewPrepTopicDto) {
     const [updated] = await db
       .update(interviewPrepTopics)
       .set({

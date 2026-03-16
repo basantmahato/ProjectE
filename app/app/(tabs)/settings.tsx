@@ -58,7 +58,7 @@ export default function Settings() {
   useEffect(() => {
     let cancelled = false;
     api
-      .get<{ id: string; rank: number }[]>('/dashbaord/leaderboard')
+      .get<{ id: string; rank: number }[]>('/dashboard/leaderboard')
       .then((res) => {
         if (cancelled) return;
         const list = Array.isArray(res.data) ? res.data : [];

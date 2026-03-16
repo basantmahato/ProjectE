@@ -13,8 +13,8 @@ import { CreateQuestionBankDto } from './dto/create-question-bank.dto';
 import { UpdateQuestionBankDto } from './dto/update-question-bank.dto';
 import { BulkUploadQuestionsDto } from './dto/bulk-upload-questions.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.gaurd';
-import { RolesGuard } from 'src/auth/roles.gaurd';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
 import { Role } from 'src/auth/decorators/roles.decorator';
 
 @ApiTags('Question Bank')

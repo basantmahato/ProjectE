@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { getToken } from "@/lib/auth";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { useAttemptResult } from "@/hooks/queries";
 import {
   getAttempt,
   getAttemptQuestions,
@@ -24,8 +25,8 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 
 export default function AttemptPage() {
   const params = useParams();
-  const router = useRouter();
   const attemptId = typeof params.id === "string" ? params.id : "";
+  const { isReady } = useRequireAuth();
   const [screenState, setScreenState] = useState<ScreenState>("loading");
   const [questions, setQuestions] = useState<AttemptQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -33,14 +34,35 @@ export default function AttemptPage() {
   const [submittedAnswers, setSubmittedAnswers] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<Attempt | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showReview, setShowReview] = useState(false);
+  const { data: resultItemsRaw, isPending: resultLoading, error: resultError } = useAttemptResult(
+    attemptId,
+    screenState === "result" && showReview
+  );
+  const resultItems = Array.isArray(resultItemsRaw) ? resultItemsRaw : [];
+  // Fallback: when API returns no details, show what we have from this session (questions + selected options)
+  const sessionReviewItems =
+    resultItems.length === 0 &&
+    questions.length > 0 &&
+    Object.keys(selectedOptions).length > 0
+      ? questions
+          .filter((q) => selectedOptions[q.questionId])
+          .map((q) => {
+            const optId = selectedOptions[q.questionId];
+            const opt = (q.options ?? []).find((o) => o.id === optId);
+            return {
+              questionId: q.questionId,
+              questionText: q.questionText ?? "",
+              selectedOptionText: opt?.optionText ?? null,
+              isCorrect: null,
+              explanation: null,
+              marks: q.marks ?? null,
+            };
+          })
+      : [];
 
   useEffect(() => {
-    if (!attemptId) return;
-    const token = getToken();
-    if (!token) {
-      router.replace("/login");
-      return;
-    }
+    if (!attemptId || !isReady) return;
     getAttempt(attemptId)
       .then((attempt) => {
         if (attempt.submittedAt != null && attempt.score != null) {
@@ -67,7 +89,7 @@ export default function AttemptPage() {
         setErrorMsg("Failed to load questions. The attempt may have already been submitted.");
         setScreenState("error");
       });
-  }, [attemptId, router]);
+  }, [attemptId, isReady]);
 
   const handleSelectOption = useCallback(
     async (questionId: string, optionId: string) => {
@@ -176,20 +198,137 @@ export default function AttemptPage() {
               </div>
             </div>
           )}
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link
-              href="/tests"
-              className="rounded-xl bg-[var(--primary)] px-6 py-3 font-bold text-white shadow-lg shadow-[var(--primary)]/20 transition-opacity hover:opacity-90"
-            >
-              Back to Tests
-            </Link>
-            <Link
-              href="/dashboard"
-              className="rounded-xl border border-slate-300 px-6 py-3 font-semibold text-slate-700 hover:bg-slate-50 dark:border-[var(--navy-700)] dark:text-slate-300 dark:hover:bg-[var(--navy-800)]"
-            >
-              Dashboard
-            </Link>
-          </div>
+          {!showReview ? (
+            <div className="mt-8 flex flex-wrap justify-center gap-4">
+              <button
+                type="button"
+                onClick={() => setShowReview(true)}
+                className="rounded-xl border border-[var(--primary)] bg-transparent px-6 py-3 font-semibold text-[var(--primary)] transition-colors hover:bg-[var(--primary)]/10"
+              >
+                Review answers
+              </button>
+              <Link
+                href="/tests"
+                className="rounded-xl bg-[var(--primary)] px-6 py-3 font-bold text-white shadow-lg shadow-[var(--primary)]/20 transition-opacity hover:opacity-90"
+              >
+                Back to Tests
+              </Link>
+              <Link
+                href="/dashboard"
+                className="rounded-xl border border-slate-300 px-6 py-3 font-semibold text-slate-700 hover:bg-slate-50 dark:border-[var(--navy-700)] dark:text-slate-300 dark:hover:bg-[var(--navy-800)]"
+              >
+                Dashboard
+              </Link>
+            </div>
+          ) : (
+            <>
+              <h3 className="mt-8 text-lg font-bold text-[var(--navy-900)] dark:text-white">
+                Review answers
+              </h3>
+              {resultLoading ? (
+                <p className="mt-4 text-slate-500 dark:text-slate-400">Loading…</p>
+              ) : resultError ? (
+                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+                  <p className="font-medium text-amber-800 dark:text-amber-200">
+                    Could not load answer details
+                  </p>
+                  <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                    {resultError instanceof Error ? resultError.message : "A network or server error occurred."} Make
+                    sure you were logged in when taking the test and try again.
+                  </p>
+                </div>
+              ) : resultItems.length > 0 ? (
+                <ul className="mt-4 space-y-6">
+                  {resultItems.map((item, index) => (
+                    <li
+                      key={item.questionId}
+                      className="rounded-xl border border-slate-200 p-4 dark:border-[var(--navy-700)]"
+                    >
+                      <p className="font-medium text-[var(--navy-900)] dark:text-white">
+                        {index + 1}. {item.questionText}
+                      </p>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <span
+                          className={`rounded-lg px-2 py-0.5 text-sm font-semibold ${
+                            item.isCorrect
+                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                              : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                          }`}
+                        >
+                          {item.isCorrect ? "Correct" : "Incorrect"}
+                        </span>
+                        {item.marks != null && (
+                          <span className="text-sm text-slate-500 dark:text-slate-400">
+                            {item.marks} pt{item.marks !== 1 ? "s" : ""}
+                          </span>
+                        )}
+                      </div>
+                      {item.selectedOptionText && (
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                          Your answer: {item.selectedOptionText}
+                        </p>
+                      )}
+                      {!item.isCorrect && item.correctOptionText && (
+                        <p className="mt-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                          Correct: {item.correctOptionText}
+                        </p>
+                      )}
+                      {item.explanation && (
+                        <div className="mt-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-[var(--navy-800)]">
+                          <span className="font-medium text-slate-700 dark:text-slate-300">
+                            Explanation:
+                          </span>{" "}
+                          {item.explanation}
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : sessionReviewItems.length > 0 ? (
+                <>
+                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                    Answer details from this session (correct/incorrect and explanations could not be loaded from the server).
+                  </p>
+                  <ul className="mt-4 space-y-6">
+                    {sessionReviewItems.map((item, index) => (
+                      <li
+                        key={item.questionId}
+                        className="rounded-xl border border-slate-200 p-4 dark:border-[var(--navy-700)]"
+                      >
+                        <p className="font-medium text-[var(--navy-900)] dark:text-white">
+                          {index + 1}. {item.questionText}
+                        </p>
+                        {item.selectedOptionText && (
+                          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                            Your answer: {item.selectedOptionText}
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <p className="mt-4 text-slate-500 dark:text-slate-400">
+                  No answer details available. Answers are saved as you select them; if you see this after submitting,
+                  they may not have been saved (e.g. connection issues). Try taking the test again while staying logged in.
+                </p>
+              )}
+              <div className="mt-8 flex flex-wrap justify-center gap-4">
+                <Link
+                  href="/tests"
+                  className="rounded-xl bg-[var(--primary)] px-6 py-3 font-bold text-white shadow-lg shadow-[var(--primary)]/20 transition-opacity hover:opacity-90"
+                >
+                  Back to Tests
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="rounded-xl border border-slate-300 px-6 py-3 font-semibold text-slate-700 hover:bg-slate-50 dark:border-[var(--navy-700)] dark:text-slate-300 dark:hover:bg-[var(--navy-800)]"
+                >
+                  Dashboard
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </PageLayout>
     );
@@ -256,7 +395,7 @@ export default function AttemptPage() {
             {current.questionText}
           </p>
           <ul className="mt-6 space-y-3">
-            {current.options.map((opt) => {
+            {(current.options ?? []).map((opt) => {
               const isSelected = selectedOptions[current.questionId] === opt.id;
               return (
                 <li key={opt.id}>

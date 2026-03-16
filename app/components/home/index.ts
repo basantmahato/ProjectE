@@ -3,7 +3,6 @@ export { QuickActionsSection } from './QuickActionsSection';
 export type { QuickActionItem } from './QuickActionsSection';
 export { DashboardHeader } from './DashboardHeader';
 export { SearchBar } from './SearchBar';
-export { BalanceCard } from './BalanceCard';
 export { PointsCard } from './PointsCard';
 export type { LeaderboardEntry } from './PointsCard';
 export { StatCard } from './StatCard';

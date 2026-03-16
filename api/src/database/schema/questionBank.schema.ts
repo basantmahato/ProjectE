@@ -5,7 +5,7 @@ export const questionBank = pgTable("question_bank", {
   id: uuid("id").defaultRandom().primaryKey(),
 
   topicId: uuid("topic_id")
-    .references(() => topics.id)
+    .references(() => topics.id, { onDelete: "cascade" })
     .notNull(),
 
   questionText: text("question_text").notNull(),

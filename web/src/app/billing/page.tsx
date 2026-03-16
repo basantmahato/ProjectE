@@ -10,11 +10,11 @@ import { CTA } from "@/components/landing/CTA";
 import { Footer } from "@/components/landing/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  getCurrentUser,
   createBillingOrder,
   verifyBillingPayment,
   type CurrentUser,
 } from "@/lib/api";
+import { useCurrentUser } from "@/hooks/queries";
 
 declare global {
   interface Window {
@@ -101,7 +101,6 @@ export default function BillingPage() {
   const queryClient = useQueryClient();
   const { isLoggedIn, isAuthReady } = useAuth();
   const [user, setUser] = useState<CurrentUser | null>(null);
-  const [loadingUser, setLoadingUser] = useState(true);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -116,21 +115,18 @@ export default function BillingPage() {
     document.body.appendChild(script);
   }, []);
 
-  useEffect(() => {
-    if (!isAuthReady || !isLoggedIn) {
-      setLoadingUser(false);
-      return;
-    }
-    getCurrentUser()
-      .then(setUser)
-      .catch(() => setUser(null))
-      .finally(() => setLoadingUser(false));
-  }, [isAuthReady, isLoggedIn]);
+  const { data: fetchedUser, isPending: fetchingUser } = useCurrentUser(isAuthReady && isLoggedIn);
 
   useEffect(() => {
-    if (!isAuthReady || isLoggedIn) return;
-    router.replace("/login");
+    if (fetchedUser) setUser(fetchedUser);
+    if (!fetchingUser && !fetchedUser && isAuthReady && isLoggedIn) setUser(null);
+  }, [fetchedUser, fetchingUser, isAuthReady, isLoggedIn]);
+
+  useEffect(() => {
+    if (isAuthReady && !isLoggedIn) router.replace("/login");
   }, [isAuthReady, isLoggedIn, router]);
+
+  const loadingUser = fetchingUser;
 
   const handleSelectPlan = async (planId: "basic" | "premium") => {
     if (!user) return;
@@ -284,7 +280,7 @@ export default function BillingPage() {
               </div>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{plan.description}</p>
               <ul className="mt-4 space-y-2">
-                {plan.features.map((f, i) => (
+                {(plan.features ?? []).map((f, i) => (
                   <li key={i} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                     <span className="material-symbols-outlined text-lg text-emerald-600">check_circle</span>
                     {f}

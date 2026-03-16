@@ -5,7 +5,7 @@ import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
 import { GoogleAuthDto } from "./dto/google-auth.dto";
 import { ApiTags } from "@nestjs/swagger";
-import { JwtAuthGuard } from "./jwt-auth.gaurd";
+import { JwtAuthGuard } from "./jwt-auth.guard";
 import { Public } from "./decorators/public.decorator";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { ChangePasswordDto } from "./dto/change-password.dto";
@@ -26,11 +26,13 @@ export class AuthController {
 
   constructor(private authService: AuthService) {}
 
+  @Public()
   @Post("register")
   register(@Body() body: RegisterDto) {
     return this.authService.register(body);
   }
 
+  @Public()
   @Post("login")
   login(@Body() body: LoginDto) {
     return this.authService.login(body);
@@ -47,6 +49,7 @@ export class AuthController {
     res.redirect(302, appRedirect);
   }
 
+  @Public()
   @Post("google")
   loginWithGoogle(@Body() body: GoogleAuthDto) {
     return this.authService.loginWithGoogle(body);

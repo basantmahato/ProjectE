@@ -1,30 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { getSubjectTopics, getSubjectTopicsBySlug, type Topic } from "@/lib/api";
+import { useSubjectTopics, useSubjectTopicsBySlug } from "@/hooks/queries";
 
 const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
 export default function SubjectTopicsPage() {
   const params = useParams();
   const subjectParam = typeof params.subjectId === "string" ? params.subjectId : "";
-  const [topics, setTopics] = useState<Topic[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!subjectParam) return;
-    const fetch = isUuid(subjectParam)
-      ? getSubjectTopics(subjectParam)
-      : getSubjectTopicsBySlug(subjectParam);
-    fetch
-      .then(setTopics)
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load topics"))
-      .finally(() => setLoading(false));
-  }, [subjectParam]);
+  const byId = useSubjectTopics(isUuid(subjectParam) ? subjectParam : "");
+  const bySlug = useSubjectTopicsBySlug(!isUuid(subjectParam) ? subjectParam : "");
+  const query = isUuid(subjectParam) ? byId : bySlug;
+  const topics = Array.isArray(query.data) ? query.data : [];
+  const loading = query.isPending;
+  const error = query.error ? (query.error instanceof Error ? query.error.message : "Failed to load topics") : null;
 
   if (!subjectParam) {
     return (

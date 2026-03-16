@@ -294,7 +294,7 @@ export function Pricing() {
                 </div>
 
                 <ul className="mb-10 flex-grow space-y-4">
-                  {plan.features.map((feature) => (
+                  {(plan.features ?? []).map((feature) => (
                     <li
                       key={feature}
                       className="flex items-center gap-3 font-medium text-slate-600 dark:text-slate-400"

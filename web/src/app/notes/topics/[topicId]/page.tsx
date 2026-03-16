@@ -1,25 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { getTopicNotes, type Note } from "@/lib/api";
+import { useTopicNotes } from "@/hooks/queries";
 
 export default function TopicNotesPage() {
   const params = useParams();
   const topicId = typeof params.topicId === "string" ? params.topicId : "";
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!topicId) return;
-    getTopicNotes(topicId)
-      .then(setNotes)
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load notes"))
-      .finally(() => setLoading(false));
-  }, [topicId]);
+  const { data: notesRaw, isPending: loading, error: queryError } = useTopicNotes(topicId);
+  const notes = Array.isArray(notesRaw) ? notesRaw : [];
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load notes") : null;
 
   if (!topicId) {
     return (

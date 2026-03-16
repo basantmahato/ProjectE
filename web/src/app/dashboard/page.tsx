@@ -34,13 +34,13 @@ export default function DashboardPage() {
     enabled: allowed === true,
   });
 
-  const { data: attempts, isPending: attemptsLoading } = useQuery({
+  const { data: attemptsData, isPending: attemptsLoading } = useQuery({
     queryKey: ["dashboard", "attempts"],
     queryFn: () => getMyAttempts(),
     enabled: allowed === true,
   });
 
-  const { data: leaderboard = [] } = useQuery({
+  const { data: leaderboardData } = useQuery({
     queryKey: ["dashboard", "leaderboard"],
     queryFn: () => getLeaderboard(),
     enabled: allowed === true,
@@ -52,36 +52,43 @@ export default function DashboardPage() {
     enabled: allowed === true,
   });
 
-  const { data: publishedTests = [] } = useQuery({
+  const { data: publishedTestsData } = useQuery({
     queryKey: ["tests", "published"],
     queryFn: () => getPublishedTests(),
     enabled: allowed === true,
   });
 
-  const { data: mockTests = [] } = useQuery({
+  const { data: mockTestsData } = useQuery({
     queryKey: ["mock-tests", "published"],
     queryFn: () => getPublishedMockTests(),
     enabled: allowed === true,
   });
 
-  const attemptsCount = Array.isArray(attempts) ? attempts.length : 0;
+  // Normalize to arrays so nothing is ever treated as iterable when it isn't
+  const attempts = Array.isArray(attemptsData) ? attemptsData : [];
+  const leaderboard = Array.isArray(leaderboardData) ? leaderboardData : [];
+  const publishedTests = Array.isArray(publishedTestsData) ? publishedTestsData : [];
+  const mockTests = Array.isArray(mockTestsData) ? mockTestsData : [];
+
+  const attemptsCount = attempts.length;
   const loading = statsLoading || attemptsLoading;
-  const topThree = Array.isArray(leaderboard) ? leaderboard.slice(0, 3) : [];
+  const topThree = leaderboard.slice(0, 3);
   const testIdToTitle = useMemo(() => {
     const map: Record<string, string> = {};
-    for (const t of publishedTests) map[t.id] = t.title ?? "Test";
-    for (const t of mockTests) map[t.id] = t.title ?? "Mock test";
+    const testsList = publishedTests;
+    const mocksList = mockTests;
+    for (const t of testsList) map[t.id] = t.title ?? "Test";
+    for (const t of mocksList) map[t.id] = t.title ?? "Mock test";
     return map;
   }, [publishedTests, mockTests]);
   const recentAttempts = useMemo(() => {
-    if (!Array.isArray(attempts)) return [];
     const withDate = (attempts as Attempt[]).map((a) => ({
       ...a,
       sortAt: a.submittedAt ? new Date(a.submittedAt).getTime() : new Date(a.startedAt ?? 0).getTime(),
     }));
     return withDate.sort((a, b) => b.sortAt - a.sortAt).slice(0, 7);
   }, [attempts]);
-  const userEntry = currentUser && Array.isArray(leaderboard)
+  const userEntry = currentUser
     ? (leaderboard as LeaderboardEntry[]).find((e) => e.id === currentUser.id)
     : null;
   const userRank = userEntry?.rank ?? null;
@@ -138,7 +145,7 @@ export default function DashboardPage() {
     },
     {
       label: "Mock tests",
-      value: "—",
+      value: stats?.mockTestsTaken != null ? String(stats.mockTestsTaken) : "—",
       icon: "timer",
       href: "/moctest",
     },

@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ProjE – Web App (Next.js)
 
-## Getting Started
+Next.js front end for ProjE. Landing page, login/register, dashboard, tests, mock tests, sample papers, interview prep, blogs, notifications, and billing.
 
-First, run the development server:
+## Getting started
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. Install dependencies:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+   ```bash
+   pnpm install
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+2. Copy env example and set variables if needed:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   ```bash
+   cp .env.example .env.local
+   ```
 
-## Learn More
+   See `.env.example` for `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_API_URL`, and `NEXT_PUBLIC_GOOGLE_CLIENT_ID`. Leave them unset in dev to use defaults (Next on port 3001, `/api` proxied to backend).
 
-To learn more about Next.js, take a look at the following resources:
+3. Run the ProjE API (see `api/README.md`) on port 3000.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+4. Start the dev server:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ```bash
+   pnpm dev
+   ```
 
-## Deploy on Vercel
+   The app runs at [http://localhost:3001](http://localhost:3001). Requests to `/api/*` are rewritten to the backend.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Environment variables
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_APP_URL` | Base URL of this app (sitemap/robots). Defaults to Vercel URL or fallback. |
+| `NEXT_PUBLIC_API_URL` | Backend API URL. Empty = use same-origin `/api` (proxy). |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google OAuth client ID for Sign in with Google. |
+
+## Tech
+
+- Next.js (App Router), React, TypeScript, Tailwind CSS
+- React Query, React Hook Form, Zustand
+- API client with JWT and error handling
+
+## Deploy
+
+Build: `pnpm build`. Start: `pnpm start`. Set `NEXT_PUBLIC_API_URL` (and optionally `NEXT_PUBLIC_APP_URL`) for production.

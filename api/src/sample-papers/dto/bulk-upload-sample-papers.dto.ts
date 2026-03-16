@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsBoolean, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class BulkSamplePaperOptionDto {
@@ -25,6 +25,7 @@ export class BulkSamplePaperQuestionDto {
 
   @ApiPropertyOptional({ description: 'Order index within topic', example: 0 })
   @IsOptional()
+  @IsNumber()
   orderIndex?: number;
 
   @ApiPropertyOptional({ type: [BulkSamplePaperOptionDto], description: 'Answer options' })

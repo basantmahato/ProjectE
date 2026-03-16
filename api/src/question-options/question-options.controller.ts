@@ -12,8 +12,8 @@ import { QuestionOptionsService } from './question-options.service';
 import { CreateQuestionOptionDto } from './dto/create-question-option.dto';
 import { UpdateQuestionOptionDto } from './dto/update-question-option.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.gaurd';
-import { RolesGuard } from 'src/auth/roles.gaurd';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
 import { Role } from 'src/auth/decorators/roles.decorator';
 
 @ApiTags('Question Options')

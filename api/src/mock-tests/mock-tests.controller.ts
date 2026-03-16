@@ -7,6 +7,7 @@ import {
   Patch,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { TestsService } from '../tests/tests.service';
 import { TestQuestionsService } from '../tests/test-questions.service';
@@ -15,8 +16,8 @@ import { UpdateMockTestDto } from '../tests/dto/update-mock-test.dto';
 import { AddQuestionToTestDto } from '../tests/dto/add-question-to-test.dto';
 import { BulkUploadMockTestsDto } from '../tests/dto/bulk-upload-mock-tests.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/jwt-auth.gaurd';
-import { RolesGuard } from '../auth/roles.gaurd';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
 import { Role } from '../auth/decorators/roles.decorator';
 
 @ApiTags('Mock Tests')
@@ -40,8 +41,11 @@ export class MockTestsController {
   }
 
   @Get()
-  findAll() {
-    return this.testsService.findAllMocks();
+  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.testsService.findAllMocks(
+      page ? Number(page) : 1,
+      limit ? Number(limit) : 20,
+    );
   }
 
   @Get(':id')
@@ -50,17 +54,17 @@ export class MockTestsController {
   }
 
   @Get(':id/questions')
-  getQuestions(@Param('id') id: string) {
-    this.testsService.findOneMock(id); // ensure it's a mock test
+  async getQuestions(@Param('id') id: string) {
+    await this.testsService.findOneMock(id);
     return this.testQuestionsService.findByTestIdWithQuestionsAndOptions(id);
   }
 
   @Post(':id/questions')
-  addQuestion(
+  async addQuestion(
     @Param('id') id: string,
     @Body() dto: AddQuestionToTestDto,
   ) {
-    this.testsService.findOneMock(id);
+    await this.testsService.findOneMock(id);
     return this.testQuestionsService.addQuestion(
       id,
       dto.questionId,
@@ -74,11 +78,11 @@ export class MockTestsController {
   }
 
   @Delete(':id/questions/:testQuestionId')
-  removeQuestion(
+  async removeQuestion(
     @Param('id') id: string,
     @Param('testQuestionId') testQuestionId: string,
   ) {
-    this.testsService.findOneMock(id);
+    await this.testsService.findOneMock(id);
     return this.testQuestionsService.removeFromTest(id, testQuestionId);
   }
 

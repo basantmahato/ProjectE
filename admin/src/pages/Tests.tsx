@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { testsApi, questionBankApi, type BulkUploadTestItem } from '../lib/api';
+import { testsApi, questionBankApi, unwrapPaginated, type BulkUploadTestItem } from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 
@@ -20,11 +20,13 @@ const schema = z.object({
   durationMinutes: z.number().min(1),
   totalMarks: z.number().min(0),
   isPublished: z.boolean().optional(),
+  scheduledAt: z.string().optional(),
+  expiresAt: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
 
-type TestRow = { id: string; title: string; description?: string; durationMinutes: number; totalMarks: number; isPublished?: boolean };
+type TestRow = { id: string; title: string; description?: string; durationMinutes: number; totalMarks: number; isPublished?: boolean; scheduledAt?: string | null; expiresAt?: string | null };
 
 export function Tests() {
   const [modal, setModal] = useState(false);
@@ -38,7 +40,7 @@ export function Tests() {
   const toast = useToast();
   const { data: tests, isLoading, isError, refetch } = useQuery({
     queryKey: ['tests'],
-    queryFn: () => testsApi.list().then((r) => r.data),
+    queryFn: () => testsApi.list().then((r) => unwrapPaginated(r as { data: unknown })),
   });
   const { data: testQuestions } = useQuery({
     queryKey: ['tests', manageTestId, 'questions'],
@@ -63,6 +65,8 @@ export function Tests() {
       durationMinutes: 30,
       totalMarks: 10,
       isPublished: false,
+      scheduledAt: '',
+      expiresAt: '',
     },
   });
 
@@ -75,12 +79,14 @@ export function Tests() {
       durationMinutes: t.durationMinutes ?? 30,
       totalMarks: t.totalMarks ?? 10,
       isPublished: t.isPublished ?? false,
+      scheduledAt: t.scheduledAt ? new Date(t.scheduledAt).toISOString().slice(0, 16) : '',
+      expiresAt: t.expiresAt ? new Date(t.expiresAt).toISOString().slice(0, 16) : '',
     });
   }, [editingId, editTest, form]);
 
   const openCreate = () => {
     setEditingId(null);
-    form.reset({ title: '', description: '', durationMinutes: 30, totalMarks: 10, isPublished: false });
+    form.reset({ title: '', description: '', durationMinutes: 30, totalMarks: 10, isPublished: false, scheduledAt: '', expiresAt: '' });
     setModal(true);
   };
 
@@ -102,6 +108,8 @@ export function Tests() {
         durationMinutes: d.durationMinutes,
         totalMarks: d.totalMarks,
         isPublished: d.isPublished,
+        scheduledAt: d.scheduledAt || undefined,
+        expiresAt: d.expiresAt || undefined,
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tests'] });
@@ -121,6 +129,8 @@ export function Tests() {
         durationMinutes: data.durationMinutes,
         totalMarks: data.totalMarks,
         isPublished: data.isPublished,
+        scheduledAt: data.scheduledAt || undefined,
+        expiresAt: data.expiresAt || undefined,
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tests'] });
@@ -158,8 +168,8 @@ export function Tests() {
   });
 
   const removeQuestionMutation = useMutation({
-    mutationFn: ({ testId, id }: { testId: string; id: string }) =>
-      testsApi.removeQuestion(testId, id),
+    mutationFn: ({ testId, testQuestionId }: { testId: string; testQuestionId: string }) =>
+      testsApi.removeQuestion(testId, testQuestionId),
     onSuccess: (_, { testId }) => {
       qc.invalidateQueries({ queryKey: ['tests', testId, 'questions'] });
       toast.success('Question removed');
@@ -355,6 +365,16 @@ export function Tests() {
                   <input type="number" {...form.register('totalMarks', { valueAsNumber: true })} className="w-full rounded-lg border border-slate-300 px-3 py-2" />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Scheduled at</label>
+                  <input type="datetime-local" {...form.register('scheduledAt')} className="w-full rounded-lg border border-slate-300 px-3 py-2" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Expires at</label>
+                  <input type="datetime-local" {...form.register('expiresAt')} className="w-full rounded-lg border border-slate-300 px-3 py-2" />
+                </div>
+              </div>
               <div className="flex items-center gap-2">
                 <input type="checkbox" {...form.register('isPublished')} id="pub" className="rounded border-slate-300" />
                 <label htmlFor="pub" className="text-sm text-slate-700">Published</label>
@@ -397,7 +417,7 @@ export function Tests() {
                   <span className="text-slate-700 truncate">{tq.question?.questionText ?? tq.questionId ?? tq.id}</span>
                   <button
                     type="button"
-                    onClick={() => removeQuestionMutation.mutate({ testId: manageTestId, id: tq.id })}
+                    onClick={() => removeQuestionMutation.mutate({ testId: manageTestId, testQuestionId: tq.id })}
                     className="text-red-600 text-sm hover:underline"
                   >
                     Remove

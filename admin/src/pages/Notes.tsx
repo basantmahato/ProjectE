@@ -18,6 +18,7 @@ const BULK_JSON_EXAMPLE: { topicId: string; notes: BulkUploadNoteItem[] } = {
 
 const schema = z.object({
   topicId: z.string().min(1, 'Select topic'),
+  slug: z.string().optional(),
   title: z.string().min(1, 'Title required'),
   content: z.string().min(1, 'Content required'),
   orderIndex: z.number().optional(),
@@ -74,6 +75,7 @@ export function Notes() {
     const n = editNote as NoteRow;
     form.reset({
       topicId: n.topicId ?? '',
+      slug: n.slug ?? '',
       title: n.title ?? '',
       content: n.content ?? '',
       orderIndex: n.orderIndex ?? 0,

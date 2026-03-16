@@ -170,7 +170,7 @@ export default function ExploreScreen() {
     }
     setStatsLoading(true);
     api
-      .get<{ totalMarks: number; accuracyPercent: number }>('/dashbaord')
+      .get<{ totalMarks: number; accuracyPercent: number }>('/dashboard')
       .then((res) => {
         setTotalMarks(res.data.totalMarks ?? 0);
         setAccuracyPercent(res.data.accuracyPercent ?? 0);

@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { DashbaordModule } from './dashbaord/dashbaord.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { SubjectsModule } from './subjects/subjects.module';
 import { TopicsModule } from './topics/topics.module';
 import { QuestionBankModule } from './question-bank/question-bank.module';
@@ -20,13 +23,18 @@ import { NotesModule } from './notes/notes.module';
 
 @Module({
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     UsersModule,
     AuthModule,
     BillingModule,
     NotificationsModule,
-    DashbaordModule,
+    DashboardModule,
     SubjectsModule,
     TopicsModule,
     QuestionBankModule,

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class BulkUploadSubtopicItemDto {
@@ -14,6 +14,7 @@ export class BulkUploadSubtopicItemDto {
 
   @ApiPropertyOptional({ description: 'Order index', example: 0 })
   @IsOptional()
+  @IsNumber()
   orderIndex?: number;
 }
 
@@ -29,6 +30,7 @@ export class BulkUploadTopicItemDto {
 
   @ApiPropertyOptional({ description: 'Order index', example: 0 })
   @IsOptional()
+  @IsNumber()
   orderIndex?: number;
 
   @ApiPropertyOptional({ type: [BulkUploadSubtopicItemDto], description: 'Subtopics under this topic' })

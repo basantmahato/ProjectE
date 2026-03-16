@@ -3,7 +3,7 @@ import axios, { AxiosError } from "axios";
 import { getDeviceId } from "@/lib/deviceId";
 
 const api = axios.create({
-  baseURL: "http://192.168.29.34:3000/",
+  baseURL: "http://192.168.29.34:8000/",
 });
 
 const ACCESS_TOKEN_KEY = "access_token";

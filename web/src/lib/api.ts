@@ -1,5 +1,17 @@
 import { getToken } from "./auth";
 
+const GUEST_DEVICE_ID_KEY = "guest_device_id";
+
+function getOrCreateGuestDeviceId(): string {
+  if (typeof window === "undefined") return "";
+  let id = localStorage.getItem(GUEST_DEVICE_ID_KEY);
+  if (!id) {
+    id = crypto.randomUUID?.() ?? `guest-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem(GUEST_DEVICE_ID_KEY, id);
+  }
+  return id;
+}
+
 // When NEXT_PUBLIC_API_URL is set, use it (e.g. production). Otherwise use same-origin /api (proxied to backend via next.config rewrites).
 const API_BASE_URL =
   typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL
@@ -151,7 +163,11 @@ export async function fetchWithAuth(
 ): Promise<Response> {
   const token = getToken();
   const headers = new Headers(options.headers);
-  if (token) headers.set("Authorization", `Bearer ${token}`);
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  } else {
+    headers.set("X-Device-ID", getOrCreateGuestDeviceId());
+  }
   return fetch(url, { ...options, headers });
 }
 
@@ -220,8 +236,12 @@ export function verifyBillingPayment(body: VerifyPaymentBody): Promise<VerifyPay
   return apiPost("/billing/verify", body, true) as Promise<VerifyPaymentResponse>;
 }
 
-// --- Dashboard (note: backend path is "dashbaord") ---
-export type DashboardStats = { totalMarks: number; accuracyPercent: number };
+// --- Dashboard ---
+export type DashboardStats = {
+  totalMarks: number;
+  accuracyPercent: number;
+  mockTestsTaken?: number;
+};
 export type LeaderboardEntry = {
   id: string;
   rank: number;
@@ -230,11 +250,13 @@ export type LeaderboardEntry = {
 };
 
 export function getDashboardStats(): Promise<DashboardStats> {
-  return apiGet<DashboardStats>("/dashbaord", true);
+  return apiGet<DashboardStats>("/dashboard", true);
 }
 
 export function getLeaderboard(): Promise<LeaderboardEntry[]> {
-  return apiGet<LeaderboardEntry[]>("/dashbaord/leaderboard");
+  return apiGet<LeaderboardEntry[] | { data?: LeaderboardEntry[] }>("/dashboard/leaderboard", false).then(
+    (r) => (Array.isArray(r) ? r : (Array.isArray(r?.data) ? r.data : []))
+  );
 }
 
 // --- Attempts ---
@@ -251,7 +273,9 @@ export type Attempt = {
 
 export function getMyAttempts(testId?: string): Promise<Attempt[]> {
   const path = testId ? `/attempts?testId=${encodeURIComponent(testId)}` : "/attempts";
-  return apiGet<Attempt[]>(path, true);
+  return apiGet<Attempt[] | { data?: Attempt[] }>(path, true).then((r) =>
+    Array.isArray(r) ? r : (Array.isArray(r?.data) ? r.data : [])
+  );
 }
 
 // --- Blog ---
@@ -335,7 +359,9 @@ export type Topic = { id: string; slug?: string; name?: string; subjectId?: stri
 export type Note = { id: string; slug?: string; title?: string; content?: string; topicId?: string; [key: string]: unknown };
 
 export function getNoteSubjects(): Promise<Subject[]> {
-  return apiGet<Subject[]>("/notes/subjects");
+  return apiGet<Subject[] | { data: Subject[] }>("/notes/subjects").then((r) =>
+    Array.isArray(r) ? r : (r?.data ?? [])
+  );
 }
 
 export function getSubjectBySlug(slug: string): Promise<Subject> {
@@ -343,21 +369,27 @@ export function getSubjectBySlug(slug: string): Promise<Subject> {
 }
 
 export function getSubjectTopics(subjectId: string): Promise<Topic[]> {
-  return apiGet<Topic[]>(`/notes/subjects/${subjectId}/topics`);
+  return apiGet<Topic[] | { data: Topic[] }>(`/notes/subjects/${subjectId}/topics`).then((r) =>
+    Array.isArray(r) ? r : (r?.data ?? [])
+  );
 }
 
 export function getSubjectTopicsBySlug(subjectSlug: string): Promise<Topic[]> {
-  return apiGet<Topic[]>(`/notes/subjects/slug/${encodeURIComponent(subjectSlug)}/topics`);
+  return apiGet<Topic[] | { data: Topic[] }>(
+    `/notes/subjects/slug/${encodeURIComponent(subjectSlug)}/topics`
+  ).then((r) => (Array.isArray(r) ? r : (r?.data ?? [])));
 }
 
 export function getTopicNotes(topicId: string): Promise<Note[]> {
-  return apiGet<Note[]>(`/notes/topics/${topicId}/notes`);
+  return apiGet<Note[] | { data: Note[] }>(`/notes/topics/${topicId}/notes`).then((r) =>
+    Array.isArray(r) ? r : (r?.data ?? [])
+  );
 }
 
 export function getTopicNotesBySlugs(subjectSlug: string, topicSlug: string): Promise<Note[]> {
-  return apiGet<Note[]>(
+  return apiGet<Note[] | { data: Note[] }>(
     `/notes/subjects/slug/${encodeURIComponent(subjectSlug)}/topics/slug/${encodeURIComponent(topicSlug)}/notes`
-  );
+  ).then((r) => (Array.isArray(r) ? r : (r?.data ?? [])));
 }
 
 export function getNote(noteId: string): Promise<Note> {
@@ -382,12 +414,17 @@ export type Test = {
   [key: string]: unknown;
 };
 
+/** Backend returns paginated { data, total, page, limit, totalPages }; we return the data array. */
 export function getPublishedTests(): Promise<Test[]> {
-  return apiGet<Test[]>("/tests/published", true);
+  return apiGet<{ data?: Test[] } | Test[]>("/tests/published", true).then((res) =>
+    Array.isArray(res) ? res : (Array.isArray((res as { data?: Test[] })?.data) ? (res as { data: Test[] }).data : [])
+  );
 }
 
 export function getUpcomingTests(): Promise<Test[]> {
-  return apiGet<Test[]>("/tests/upcoming", true);
+  return apiGet<Test[] | { data: Test[] }>("/tests/upcoming", true).then((res) =>
+    Array.isArray(res) ? res : (res?.data ?? [])
+  );
 }
 
 export function getPublishedTest(id: string): Promise<Test> {
@@ -426,7 +463,9 @@ export function getAttempt(attemptId: string): Promise<Attempt> {
 }
 
 export function getAttemptQuestions(attemptId: string): Promise<AttemptQuestion[]> {
-  return apiGet<AttemptQuestion[]>(`/attempts/${attemptId}/questions`, true);
+  return apiGet<AttemptQuestion[]>(`/attempts/${attemptId}/questions`, true).then((r) =>
+    Array.isArray(r) ? r : []
+  );
 }
 
 export function submitAttemptAnswer(
@@ -441,9 +480,29 @@ export function submitAttempt(attemptId: string): Promise<Attempt> {
   return apiPost(`/attempts/${attemptId}/submit`, undefined, true) as Promise<Attempt>;
 }
 
+export type AttemptResultItem = {
+  questionId: string;
+  questionText: string;
+  explanation: string | null;
+  marks: number | null;
+  selectedOptionId: string | null;
+  selectedOptionText: string | null;
+  isCorrect: boolean;
+  correctOptionId: string | null;
+  correctOptionText: string | null;
+};
+
+export function getAttemptResult(attemptId: string): Promise<AttemptResultItem[]> {
+  return apiGet<AttemptResultItem[]>(`/attempts/${attemptId}/result`, true).then((r) =>
+    Array.isArray(r) ? r : []
+  );
+}
+
 // --- Mock tests ---
 export function getPublishedMockTests(): Promise<Test[]> {
-  return apiGet<Test[]>("/mock-tests/published", true);
+  return apiGet<Test[] | { data?: Test[] }>("/mock-tests/published", true).then((res) =>
+    Array.isArray(res) ? res : (Array.isArray((res as { data?: Test[] })?.data) ? (res as { data: Test[] }).data : [])
+  );
 }
 
 export function getPublishedMockTest(id: string): Promise<Test> {
@@ -504,7 +563,9 @@ export type SamplePaperFull = {
 };
 
 export function getSamplePapersList(): Promise<SamplePaperListItem[]> {
-  return apiGet<SamplePaperListItem[]>("/sample-papers/list", true);
+  return apiGet<SamplePaperListItem[] | { data: SamplePaperListItem[] }>("/sample-papers/list", true).then(
+    (r) => (Array.isArray(r) ? r : (r?.data ?? []))
+  );
 }
 
 /** Fetch full paper (subjects → topics → questions → options). Sends auth or X-Device-ID for guest. */
@@ -557,7 +618,9 @@ export type InterviewPrepJobRole = {
 };
 
 export function getInterviewPrepList(): Promise<InterviewPrepJobRole[]> {
-  return apiGet<InterviewPrepJobRole[]>("/interview-prep/list", true);
+  return apiGet<InterviewPrepJobRole[] | { data: InterviewPrepJobRole[] }>("/interview-prep/list", true).then(
+    (r) => (Array.isArray(r) ? r : (r?.data ?? []))
+  );
 }
 
 export function getInterviewPrepRole(roleId: string): Promise<unknown> {
@@ -574,10 +637,41 @@ export type Notification = {
   read: boolean;
 };
 
+export type NotificationsPaginatedResponse = {
+  data: Notification[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
 export function getNotifications(): Promise<Notification[]> {
-  return apiGet<Notification[]>("/notifications", true);
+  return getNotificationsPaginated(1, 20).then((r) => (Array.isArray(r?.data) ? r.data : []));
+}
+
+export function getNotificationsPaginated(
+  page: number = 1,
+  limit: number = 20
+): Promise<NotificationsPaginatedResponse> {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  return apiGet<NotificationsPaginatedResponse>(`/notifications?${params.toString()}`, true);
 }
 
 export function markNotificationRead(id: string): Promise<unknown> {
   return apiPost(`/notifications/${id}/read`, undefined, true);
+}
+
+export function getVapidPublicKey(): Promise<{ vapidPublicKey: string | null }> {
+  return apiGet<{ vapidPublicKey: string | null }>("/notifications/vapid-public-key", false);
+}
+
+export type WebPushSubscriptionPayload = {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+};
+
+export function registerWebPushSubscription(
+  subscription: WebPushSubscriptionPayload
+): Promise<unknown> {
+  return apiPost("/notifications/register-web-push", subscription, true);
 }

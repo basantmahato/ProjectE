@@ -48,7 +48,7 @@ export default function Rank() {
     (async () => {
       try {
         setError(null);
-        const { data } = await api.get<LeaderboardEntry[]>('/dashbaord/leaderboard');
+        const { data } = await api.get<LeaderboardEntry[]>('/dashboard/leaderboard');
         if (!cancelled) setList(Array.isArray(data) ? data : []);
       } catch {
         if (!cancelled) setError('Failed to load leaderboard');

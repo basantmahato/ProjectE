@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { getTopicNotes, getTopicNotesBySlugs, type Note } from "@/lib/api";
+import { useTopicNotes, useTopicNotesBySlugs } from "@/hooks/queries";
 
 const isUuid = (s: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
@@ -13,20 +12,15 @@ export default function TopicNotesPage() {
   const params = useParams();
   const subjectParam = typeof params.subjectId === "string" ? params.subjectId : "";
   const topicParam = typeof params.topicSlugOrId === "string" ? params.topicSlugOrId : "";
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!subjectParam || !topicParam) return;
-    const fetch = isUuid(topicParam)
-      ? getTopicNotes(topicParam)
-      : getTopicNotesBySlugs(subjectParam, topicParam);
-    fetch
-      .then(setNotes)
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load notes"))
-      .finally(() => setLoading(false));
-  }, [subjectParam, topicParam]);
+  const byId = useTopicNotes(isUuid(topicParam) ? topicParam : "");
+  const bySlugs = useTopicNotesBySlugs(
+    !isUuid(topicParam) ? subjectParam : "",
+    !isUuid(topicParam) ? topicParam : "",
+  );
+  const query = isUuid(topicParam) ? byId : bySlugs;
+  const notes = Array.isArray(query.data) ? query.data : [];
+  const loading = query.isPending;
+  const error = query.error ? (query.error instanceof Error ? query.error.message : "Failed to load notes") : null;
 
   if (!subjectParam || !topicParam) {
     return (

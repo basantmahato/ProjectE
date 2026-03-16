@@ -74,6 +74,16 @@ export class AttemptsController {
     return this.attemptsService.findMyAttempts(userId, did, testId);
   }
 
+  @Get(':id/result')
+  getResult(
+    @Param('id') id: string,
+    @Req() req: RequestWithOptionalUser,
+    @Headers('x-device-id') deviceId?: string,
+  ) {
+    const { userId, deviceId: did } = requireIdentity(req, deviceId);
+    return this.attemptsService.getAttemptResult(id, userId, did);
+  }
+
   @Get(':id')
   findOne(
     @Param('id') id: string,

@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { db } from '../database/db';
 import { tests } from '../database/schema/test.schema';
-import { and, eq, isNull, lte, or, gte, gt } from 'drizzle-orm';
+import { testQuestions } from '../database/schema/testQuestions.schema';
+import { and, eq, isNull, lte, or, gte, gt, sql } from 'drizzle-orm';
 import { slugify, ensureUniqueSlug } from '../common/slug.util';
 import { CreateTestDto } from './dto/create-test.dto';
 import { UpdateTestDto } from './dto/update-test.dto';
@@ -37,23 +38,45 @@ export class TestsService {
     return test[0];
   }
 
-  async findAll() {
-    return db.select().from(tests);
+  async findAll(page = 1, limit = 20) {
+    const pageNum = Math.max(1, page);
+    const limitNum = Math.min(50, Math.max(1, limit));
+    const offset = (pageNum - 1) * limitNum;
+
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(tests);
+    const total = countResult?.count ?? 0;
+
+    const data = await db.select().from(tests).limit(limitNum).offset(offset);
+    return { data, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) || 1 };
   }
 
-  async findPublished() {
+  async findPublished(page = 1, limit = 20) {
     const now = new Date();
-    return db
+    const pageNum = Math.max(1, page);
+    const limitNum = Math.min(50, Math.max(1, limit));
+    const offset = (pageNum - 1) * limitNum;
+    const condition = and(
+      eq(tests.isPublished, true),
+      eq(tests.isMock, false),
+      or(isNull(tests.scheduledAt), lte(tests.scheduledAt, now)),
+      or(isNull(tests.expiresAt), gte(tests.expiresAt, now)),
+    );
+
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(tests)
+      .where(condition);
+    const total = countResult?.count ?? 0;
+
+    const data = await db
       .select()
       .from(tests)
-      .where(
-        and(
-          eq(tests.isPublished, true),
-          eq(tests.isMock, false),
-          or(isNull(tests.scheduledAt), lte(tests.scheduledAt, now)),
-          or(isNull(tests.expiresAt), gte(tests.expiresAt, now)),
-        ),
-      );
+      .where(condition)
+      .limit(limitNum)
+      .offset(offset);
+    return { data, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) || 1 };
   }
 
   async createMock(dto: CreateMockTestDto) {
@@ -79,11 +102,24 @@ export class TestsService {
     return test[0];
   }
 
-  async findAllMocks() {
-    return db
-      .select()
+  async findAllMocks(page = 1, limit = 20) {
+    const pageNum = Math.max(1, page);
+    const limitNum = Math.min(50, Math.max(1, limit));
+    const offset = (pageNum - 1) * limitNum;
+
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
       .from(tests)
       .where(eq(tests.isMock, true));
+    const total = countResult?.count ?? 0;
+
+    const data = await db
+      .select()
+      .from(tests)
+      .where(eq(tests.isMock, true))
+      .limit(limitNum)
+      .offset(offset);
+    return { data, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) || 1 };
   }
 
   async findOneMock(id: string) {
@@ -273,42 +309,80 @@ export class TestsService {
   async bulkCreate(dto: BulkUploadTestsDto) {
     const created = { count: 0 };
     const errors: { index: number; message: string }[] = [];
-    for (let i = 0; i < dto.tests.length; i++) {
-      try {
-        await this.create(dto.tests[i]);
-        created.count += 1;
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        errors.push({ index: i, message });
+
+    await db.transaction(async (tx) => {
+      for (let i = 0; i < dto.tests.length; i++) {
+        try {
+          const item = dto.tests[i];
+          const slug = await ensureUniqueSlug(slugify(item.title), async (s) => {
+            const [existing] = await tx.select().from(tests).where(eq(tests.slug, s));
+            return !!existing;
+          });
+          await tx.insert(tests).values({
+            slug,
+            title: item.title,
+            description: item.description,
+            durationMinutes: item.durationMinutes,
+            totalMarks: item.totalMarks,
+            isPublished: item.isPublished ?? false,
+            scheduledAt: item.scheduledAt ? new Date(item.scheduledAt) : null,
+            expiresAt: item.expiresAt ? new Date(item.expiresAt) : null,
+          });
+          created.count += 1;
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          errors.push({ index: i, message });
+        }
       }
-    }
+    });
+
     return { created, errors: errors.length ? errors : undefined };
   }
 
   async bulkCreateMocks(dto: BulkUploadMockTestsDto) {
     const created = { count: 0 };
     const errors: { index: number; message: string }[] = [];
-    for (let i = 0; i < dto.mockTests.length; i++) {
-      const item = dto.mockTests[i];
-      try {
-        const mock = await this.createMock({
-          title: item.title,
-          description: item.description,
-          durationMinutes: item.durationMinutes,
-          totalMarks: item.totalMarks,
-          isPublished: item.isPublished,
-        });
-        created.count += 1;
-        if (item.questionIds?.length) {
-          for (let order = 0; order < item.questionIds.length; order++) {
-            await this.testQuestionsService.addQuestion(mock.id, item.questionIds[order], order);
+
+    await db.transaction(async (tx) => {
+      for (let i = 0; i < dto.mockTests.length; i++) {
+        const item = dto.mockTests[i];
+        try {
+          const slug = await ensureUniqueSlug(slugify(item.title), async (s) => {
+            const [existing] = await tx.select().from(tests).where(eq(tests.slug, s));
+            return !!existing;
+          });
+          const [mock] = await tx
+            .insert(tests)
+            .values({
+              slug,
+              title: item.title,
+              description: item.description,
+              durationMinutes: item.durationMinutes,
+              totalMarks: item.totalMarks,
+              isPublished: item.isPublished ?? false,
+              isMock: true,
+              scheduledAt: null,
+              expiresAt: null,
+            })
+            .returning();
+          created.count += 1;
+
+          if (item.questionIds?.length) {
+            for (let order = 0; order < item.questionIds.length; order++) {
+              await tx.insert(testQuestions).values({
+                testId: mock.id,
+                questionId: item.questionIds[order],
+                questionOrder: order,
+              });
+            }
           }
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          errors.push({ index: i, message });
         }
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        errors.push({ index: i, message });
       }
-    }
+    });
+
     return { created, errors: errors.length ? errors : undefined };
   }
 }

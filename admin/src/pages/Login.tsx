@@ -40,9 +40,11 @@ export function Login() {
       toast.success('Signed in successfully');
       navigate('/', { replace: true });
     },
-    onError: (err: { response?: { data?: { message?: string } } }) => {
+    onError: (err: { response?: { data?: { message?: string | string[] } } }) => {
+      const raw = err.response?.data?.message;
+      const message = Array.isArray(raw) ? raw[0] ?? 'Login failed' : (raw ?? 'Login failed');
       setError('root', {
-        message: err.response?.data?.message ?? 'Login failed',
+        message: typeof message === 'string' ? message : 'Login failed',
       });
     },
   });

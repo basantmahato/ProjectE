@@ -1,28 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { getNote, getNoteBySlug, type Note } from "@/lib/api";
+import { useNote } from "@/hooks/queries";
 
 export default function NoteViewPage() {
   const params = useParams();
   const slug = typeof params.slug === "string" ? params.slug : "";
-  const [note, setNote] = useState<Note | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
-
-  useEffect(() => {
-    if (!slug) return;
-    const fetchNote = isUuid(slug) ? getNote(slug) : getNoteBySlug(slug);
-    fetchNote
-      .then(setNote)
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load note"))
-      .finally(() => setLoading(false));
-  }, [slug]);
+  const { data: note, isPending: loading, error: queryError } = useNote(slug);
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load note") : null;
 
   if (!slug) {
     return (

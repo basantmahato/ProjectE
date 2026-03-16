@@ -7,7 +7,7 @@
 const BASE_URL =
   typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL
     ? process.env.NEXT_PUBLIC_API_URL
-    : process.env?.API_PROXY_TARGET || "http://localhost:3000";
+    : process.env?.API_PROXY_TARGET || "http://localhost:8000";
 
 function getErrorMessage(data: unknown, fallback: string): string {
   if (data && typeof data === "object" && "message" in data) {
