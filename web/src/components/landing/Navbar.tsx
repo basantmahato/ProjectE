@@ -127,13 +127,6 @@ function NavbarInner() {
               ))}
               {!isAuthReady ? null : isLoggedIn ? (
                 <>
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setMobileOpen(false)}
-                    className="rounded-lg px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-300"
-                  >
-                    Dashboard
-                  </Link>
                   <button
                     type="button"
                     onClick={() => {
