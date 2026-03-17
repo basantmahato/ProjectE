@@ -5,6 +5,7 @@ const apiProxyTarget =
   process.env.API_PROXY_TARGET || "http://localhost:3000";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   reactCompiler: true,
   images: {
     remotePatterns: [
