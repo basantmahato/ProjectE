@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -41,17 +41,20 @@ interface SubmitResult {
 
 type ScreenState = 'loading' | 'questions' | 'submitting' | 'result' | 'error';
 
-const DIFFICULTY_COLORS: Record<string, string> = {
-  easy: '#10b981',
-  medium: '#f59e0b',
-  hard: '#ef4444',
-};
-
 export default function AttemptScreen() {
   const { id: attemptId } = useLocalSearchParams<{ id: string }>();
   const { theme } = themeStore(useShallow((state) => ({ theme: state.theme })));
   const dark = theme === 'dark';
   const colors = dark ? darkColors : lightColors;
+
+  const difficultyColors: Record<string, string> = useMemo(
+    () => ({
+      easy: colors.success,
+      medium: colors.accent,
+      hard: colors.danger,
+    }),
+    [colors.success, colors.accent, colors.danger]
+  );
 
   const [screenState, setScreenState] = useState<ScreenState>('loading');
   const [questions, setQuestions] = useState<AttemptQuestion[]>([]);
@@ -229,7 +232,7 @@ export default function AttemptScreen() {
   const isLast = currentIndex === questions.length - 1;
   const selectedOption = selectedOptions[question.questionId] ?? null;
   const difficultyColor =
-    DIFFICULTY_COLORS[question.difficulty?.toLowerCase() ?? ''] ?? colors.subText;
+    difficultyColors[question.difficulty?.toLowerCase() ?? ''] ?? colors.subText;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>

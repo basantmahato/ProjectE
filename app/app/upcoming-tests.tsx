@@ -23,8 +23,6 @@ interface UpcomingTest {
   expiresAt: string | null;
 }
 
-const ACCENT = '#10b981';
-
 function useCountdown(targetIso: string) {
   const getRemaining = () => {
     const diff = new Date(targetIso).getTime() - Date.now();
@@ -44,12 +42,12 @@ function useCountdown(targetIso: string) {
   return remaining;
 }
 
-function CountdownBadge({ scheduledAt }: { scheduledAt: string }) {
+function CountdownBadge({ scheduledAt, primaryColor }: { scheduledAt: string; primaryColor: string }) {
   const r = useCountdown(scheduledAt);
   if (!r) {
     return (
-      <View style={[countdownStyles.badge, { backgroundColor: ACCENT + '20' }]}>
-        <Text style={[countdownStyles.text, { color: ACCENT }]}>Starting now</Text>
+      <View style={[countdownStyles.badge, { backgroundColor: primaryColor + '20' }]}>
+        <Text style={[countdownStyles.text, { color: primaryColor }]}>Starting now</Text>
       </View>
     );
   }
@@ -59,9 +57,9 @@ function CountdownBadge({ scheduledAt }: { scheduledAt: string }) {
   if (r.minutes > 0) parts.push(`${r.minutes}m`);
   if (r.days === 0) parts.push(`${r.seconds}s`);
   return (
-    <View style={[countdownStyles.badge, { backgroundColor: ACCENT + '20' }]}>
-      <View style={[countdownStyles.dot, { backgroundColor: ACCENT }]} />
-      <Text style={[countdownStyles.text, { color: ACCENT }]}>
+    <View style={[countdownStyles.badge, { backgroundColor: primaryColor + '20' }]}>
+      <View style={[countdownStyles.dot, { backgroundColor: primaryColor }]} />
+      <Text style={[countdownStyles.text, { color: primaryColor }]}>
         Starts in {parts.join(' ')}
       </Text>
     </View>
@@ -107,9 +105,9 @@ export default function UpcomingTestsScreen() {
 
   const renderItem = ({ item }: { item: UpcomingTest }) => (
     <View style={[styles.card, { backgroundColor: colors.card }]}>
-      <View style={[styles.topBar, { backgroundColor: ACCENT }]} />
+      <View style={[styles.topBar, { backgroundColor: colors.primary }]} />
       <View style={styles.body}>
-        <CountdownBadge scheduledAt={item.scheduledAt} />
+        <CountdownBadge scheduledAt={item.scheduledAt} primaryColor={colors.primary} />
         <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
           {item.title}
         </Text>
@@ -159,7 +157,7 @@ export default function UpcomingTestsScreen() {
       />
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
         {loading ? (
-          <ActivityIndicator color={ACCENT} style={styles.loader} />
+          <ActivityIndicator color={colors.primary} style={styles.loader} />
         ) : error ? (
           <View style={[styles.empty, { backgroundColor: colors.card }]}>
             <Text style={styles.emptyIcon}>⚠️</Text>

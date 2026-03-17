@@ -5,7 +5,6 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,6 +12,7 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
@@ -22,10 +22,9 @@ import { darkColors, lightColors } from '@/themes/color';
 import { authStore } from '@/store/authStore';
 import { useGoogleAuthRequest } from '@/lib/googleAuth';
 
-const { width } = Dimensions.get('window');
-
 export default function LoginScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
 
   const theme = themeStore((state) => state.theme);
   const colors = theme === 'dark' ? darkColors : lightColors;
@@ -192,7 +191,7 @@ export default function LoginScreen() {
               </View>
 
               {loginError ? (
-                <Text style={styles.errorText}>{loginError}</Text>
+                <Text style={[styles.errorText, { color: colors.danger }]}>{loginError}</Text>
               ) : null}
               {/* CTA */}
               <Animated.View style={{ transform: [{ scale: btnScale }], marginTop: 24 }}>
@@ -328,7 +327,7 @@ const styles = StyleSheet.create({
   },
   inputIcon: { fontSize: 16, marginRight: 10 },
   input: { flex: 1, fontSize: 15 },
-  errorText: { fontSize: 14, color: '#e74c3c', marginTop: 12, textAlign: 'center' },
+  errorText: { fontSize: 14, marginTop: 12, textAlign: 'center' },
   btnPressable: { borderRadius: 16, overflow: 'hidden' },
   btn: {
     alignItems: 'center',

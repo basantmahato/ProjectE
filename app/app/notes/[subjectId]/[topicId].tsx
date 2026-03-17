@@ -24,8 +24,6 @@ interface Note {
   updatedAt: string;
 }
 
-const NOTES_ACCENT = '#10b981';
-
 function excerpt(text: string, maxLen: number = 120): string {
   const trimmed = text.trim();
   if (trimmed.length <= maxLen) return trimmed;
@@ -63,14 +61,14 @@ export default function NotesListScreen() {
       onPress={() => router.push(`/notes/note/${item.id}`)}
       activeOpacity={0.75}
     >
-      <View style={[styles.accentBar, { backgroundColor: NOTES_ACCENT }]} />
+      <View style={[styles.accentBar, { backgroundColor: colors.primary }]} />
       <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
         {item.title}
       </Text>
       <Text style={[styles.preview, { color: colors.subText }]} numberOfLines={2}>
         {excerpt(item.content)}
       </Text>
-      <Text style={[styles.cta, { color: NOTES_ACCENT }]}>Read note →</Text>
+      <Text style={[styles.cta, { color: colors.primary }]}>Read note →</Text>
     </TouchableOpacity>
   );
 
@@ -91,7 +89,7 @@ export default function NotesListScreen() {
         edges={['bottom']}
       >
         {loading ? (
-          <ActivityIndicator color={NOTES_ACCENT} style={styles.loader} />
+          <ActivityIndicator color={colors.primary} style={styles.loader} />
         ) : error ? (
           <View style={[styles.empty, { backgroundColor: colors.card }]}>
             <Text style={styles.emptyIcon}>⚠️</Text>

@@ -51,31 +51,19 @@ interface TestAttempt {
   score: number | null;
 }
 
-const TEST_CATEGORIES: Array<{
+const TEST_CATEGORIES_BASE: Array<{
   id: string;
   title: string;
   icon: string;
   count: string;
-  color: string;
   route?: string;
 }> = [
-  { id: '1', title: 'Upcoming', icon: '📅', count: 'Scheduled', color: '#10b981', route: '/upcoming-tests' },
-  { id: '2', title: 'Recent Tests', icon: '🕐', count: 'Attempted', color: '#6366f1', route: '/recent-tests' },
-  { id: '3', title: 'Mock Tests', icon: '📝', count: 'Practice', color: '#f59e0b', route: '/mock-tests' },
-  { id: '4', title: 'Sample Papers', icon: '📄', count: 'Read', color: '#3b82f6', route: '/sample-papers' },
-  { id: '5', title: 'Interview Prep', icon: '💼', count: 'Topic wise', color: '#8b5cf6', route: '/interview-prep' },
-  { id: '6', title: 'Performance', icon: '📊', count: 'View Stats', color: '#ec4899', route: '/performance' },
-];
-
-const CATEGORY_ROWS = chunk(TEST_CATEGORIES, 2);
-
-const ACCENT_COLORS = [
-  '#6366f1',
-  '#10b981',
-  '#f59e0b',
-  '#3b82f6',
-  '#8b5cf6',
-  '#ec4899',
+  { id: '1', title: 'Upcoming', icon: '📅', count: 'Scheduled', route: '/upcoming-tests' },
+  { id: '2', title: 'Recent Tests', icon: '🕐', count: 'Attempted', route: '/recent-tests' },
+  { id: '3', title: 'Mock Tests', icon: '📝', count: 'Practice', route: '/mock-tests' },
+  { id: '4', title: 'Sample Papers', icon: '📄', count: 'Read', route: '/sample-papers' },
+  { id: '5', title: 'Interview Prep', icon: '💼', count: 'Topic wise', route: '/interview-prep' },
+  { id: '6', title: 'Performance', icon: '📊', count: 'View Stats', route: '/performance' },
 ];
 
 const TestScreen = () => {
@@ -85,6 +73,16 @@ const TestScreen = () => {
   const dark = theme === 'dark';
   const colors = dark ? darkColors : lightColors;
   const canAccessInterviewPrep = canAccessFeature(user?.plan, 'interviewPrep');
+
+  const testCategories = useMemo(
+    () => TEST_CATEGORIES_BASE.map((c) => ({ ...c, color: colors.primary })),
+    [colors.primary]
+  );
+  const categoryRows = useMemo(() => chunk(testCategories, 2), [testCategories]);
+  const accentColors = useMemo(
+    () => [colors.primary, colors.success, colors.accent, colors.primary, colors.primary, colors.primary],
+    [colors.primary, colors.success, colors.accent]
+  );
 
   const horizontalPadding = useMemo(
     () => Math.min(Math.max(width * 0.05, HORIZONTAL_PADDING_MIN), HORIZONTAL_PADDING_MAX),
@@ -156,7 +154,7 @@ const TestScreen = () => {
           contentContainerStyle={styles.horizontalScroll}
         >
           {activeTests.map((test, index) => {
-            const accent = ACCENT_COLORS[index % ACCENT_COLORS.length];
+            const accent = accentColors[index % accentColors.length];
             return (
               <TouchableOpacity
                 key={test.id}
@@ -211,7 +209,7 @@ const TestScreen = () => {
           {renderActiveTestsSection()}
           <Text style={[styles.categoriesLabel, { color: colors.subText }]}>Browse Categories</Text>
           <View style={styles.grid}>
-            {CATEGORY_ROWS.map((row, rowIndex) => (
+            {categoryRows.map((row, rowIndex) => (
               <View key={rowIndex} style={styles.row}>
                 {row.map((item) => {
                   const isInterviewPrep = item.id === '5';
@@ -238,8 +236,8 @@ const TestScreen = () => {
                           <Text style={[styles.lockBadgeText, { color: colors.subText }]}>Basic</Text>
                         </View>
                       ) : null}
-                      <Text style={[styles.cardTitle, { color: colors.text }]}>{item.title}</Text>
-                      <Text style={[styles.cardSubtitle, { color: colors.subText }]}>{locked ? 'Upgrade to access' : item.count}</Text>
+                      <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={2}>{item.title}</Text>
+                      <Text style={[styles.cardSubtitle, { color: colors.subText }]} numberOfLines={1}>{locked ? 'Upgrade to access' : item.count}</Text>
                     </TouchableOpacity>
                   );
                 })}

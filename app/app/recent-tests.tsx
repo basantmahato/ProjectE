@@ -41,8 +41,6 @@ interface RecentTest extends PublishedTest {
   startedAt: string;
 }
 
-const ACCENT_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899'];
-
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, {
     day: 'numeric',
@@ -108,7 +106,7 @@ export default function RecentTestsScreen() {
   }, []);
 
   const renderItem = ({ item, index }: { item: RecentTest; index: number }) => {
-    const accent = ACCENT_COLORS[index % ACCENT_COLORS.length];
+    const accent = colors.primary;
     const scorePercent =
       item.score != null && item.totalMarks > 0
         ? Math.round((item.score / item.totalMarks) * 100)
@@ -133,22 +131,22 @@ export default function RecentTestsScreen() {
                   styles.scoreBadge,
                   {
                     backgroundColor:
-                      scorePercent >= 60 ? '#10b98120' : '#ef444420',
+                      scorePercent >= 60 ? colors.success + '20' : colors.danger + '20',
                   },
                 ]}
               >
                 <Text
                   style={[
                     styles.scoreText,
-                    { color: scorePercent >= 60 ? '#10b981' : '#ef4444' },
+                    { color: scorePercent >= 60 ? colors.success : colors.danger },
                   ]}
                 >
                   {item.score}/{item.totalMarks}
                 </Text>
               </View>
             ) : (
-              <View style={[styles.scoreBadge, { backgroundColor: '#f59e0b20' }]}>
-                <Text style={[styles.scoreText, { color: '#f59e0b' }]}>
+              <View style={[styles.scoreBadge, { backgroundColor: colors.accent + '20' }]}>
+                <Text style={[styles.scoreText, { color: colors.accent }]}>
                   In Progress
                 </Text>
               </View>

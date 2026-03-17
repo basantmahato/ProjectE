@@ -21,8 +21,6 @@ interface Topic {
   createdAt: string;
 }
 
-const NOTES_ACCENT = '#10b981';
-
 export default function NotesTopicsScreen() {
   const { subjectId } = useLocalSearchParams<{ subjectId: string }>();
   const { theme } = themeStore(useShallow((state) => ({ theme: state.theme })));
@@ -54,11 +52,11 @@ export default function NotesTopicsScreen() {
       onPress={() => router.push(`/notes/${subjectId}/${item.id}`)}
       activeOpacity={0.75}
     >
-      <View style={[styles.accentBar, { backgroundColor: NOTES_ACCENT }]} />
+      <View style={[styles.accentBar, { backgroundColor: colors.primary }]} />
       <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
         {item.name}
       </Text>
-      <Text style={[styles.cta, { color: NOTES_ACCENT }]}>View notes →</Text>
+      <Text style={[styles.cta, { color: colors.primary }]}>View notes →</Text>
     </TouchableOpacity>
   );
 
@@ -79,7 +77,7 @@ export default function NotesTopicsScreen() {
         edges={['bottom']}
       >
         {loading ? (
-          <ActivityIndicator color={NOTES_ACCENT} style={styles.loader} />
+          <ActivityIndicator color={colors.primary} style={styles.loader} />
         ) : error ? (
           <View style={[styles.empty, { backgroundColor: colors.card }]}>
             <Text style={styles.emptyIcon}>⚠️</Text>

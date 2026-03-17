@@ -21,8 +21,6 @@ interface Subject {
   createdAt: string;
 }
 
-const NOTES_ACCENT = '#10b981';
-
 export default function NotesScreen() {
   const { theme } = themeStore(useShallow((state) => ({ theme: state.theme })));
   const dark = theme === 'dark';
@@ -52,9 +50,9 @@ export default function NotesScreen() {
       onPress={() => router.push(`/notes/${item.id}`)}
       activeOpacity={0.75}
     >
-      <View style={[styles.accentBar, { backgroundColor: NOTES_ACCENT }]} />
-      <View style={[styles.badge, { backgroundColor: NOTES_ACCENT + '22' }]}>
-        <Text style={[styles.badgeText, { color: NOTES_ACCENT }]}>Subject</Text>
+      <View style={[styles.accentBar, { backgroundColor: colors.primary }]} />
+      <View style={[styles.badge, { backgroundColor: colors.primary + '22' }]}>
+        <Text style={[styles.badgeText, { color: colors.primary }]}>Subject</Text>
       </View>
       <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
         {item.name}
@@ -64,7 +62,7 @@ export default function NotesScreen() {
           {item.examType}
         </Text>
       ) : null}
-      <Text style={[styles.cta, { color: NOTES_ACCENT }]}>View topics →</Text>
+      <Text style={[styles.cta, { color: colors.primary }]}>View topics →</Text>
     </TouchableOpacity>
   );
 
@@ -85,7 +83,7 @@ export default function NotesScreen() {
         edges={['bottom']}
       >
         {loading ? (
-          <ActivityIndicator color={NOTES_ACCENT} style={styles.loader} />
+          <ActivityIndicator color={colors.primary} style={styles.loader} />
         ) : error ? (
           <View style={[styles.empty, { backgroundColor: colors.card }]}>
             <Text style={styles.emptyIcon}>⚠️</Text>

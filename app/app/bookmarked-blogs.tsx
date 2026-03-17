@@ -15,8 +15,6 @@ import { blogBookmarkStore, BookmarkedBlogItem } from '@/store/blogBookmarkStore
 import { darkColors, lightColors } from '@/themes/color';
 import { useShallow } from 'zustand/react/shallow';
 
-const BLOG_ACCENT = '#0ea5e9';
-
 function formatDate(iso: string | null): string {
   if (!iso) return '';
   const d = new Date(iso);
@@ -46,12 +44,12 @@ export default function BookmarkedBlogsScreen() {
         {item.featuredImage ? (
           <Image
             source={{ uri: item.featuredImage }}
-            style={styles.featuredImage}
+            style={[styles.featuredImage, { backgroundColor: colors.border }]}
             resizeMode="cover"
           />
         ) : (
-          <View style={[styles.placeholderImage, { backgroundColor: BLOG_ACCENT + '22' }]}>
-            <Text style={[styles.placeholderIcon, { color: BLOG_ACCENT }]}>📄</Text>
+          <View style={[styles.placeholderImage, { backgroundColor: colors.primary + '22' }]}>
+            <Text style={[styles.placeholderIcon, { color: colors.primary }]}>📄</Text>
           </View>
         )}
         <View style={styles.cardContent}>
@@ -66,7 +64,7 @@ export default function BookmarkedBlogsScreen() {
           <Text style={[styles.date, { color: colors.subText }]}>
             {item.publishedAt ? formatDate(item.publishedAt) : 'Draft'}
           </Text>
-          <Text style={[styles.cta, { color: BLOG_ACCENT }]}>Read more →</Text>
+          <Text style={[styles.cta, { color: colors.primary }]}>Read more →</Text>
         </View>
       </TouchableOpacity>
       <TouchableOpacity
@@ -74,7 +72,7 @@ export default function BookmarkedBlogsScreen() {
         onPress={() => removeBookmark(item.id)}
         hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       >
-        <MaterialIcons name="bookmark" size={22} color={BLOG_ACCENT} />
+        <MaterialIcons name="bookmark" size={22} color={colors.primary} />
         <Text style={[styles.removeBookmarkText, { color: colors.subText }]}>
           Remove
         </Text>
@@ -108,7 +106,7 @@ export default function BookmarkedBlogsScreen() {
               Bookmark posts from the Blog to see them here.
             </Text>
             <TouchableOpacity
-              style={[styles.browseBtn, { backgroundColor: BLOG_ACCENT }]}
+              style={[styles.browseBtn, { backgroundColor: colors.primary }]}
               onPress={() => router.push('/blog')}
             >
               <Text style={styles.browseBtnText}>Browse blog</Text>
@@ -149,7 +147,6 @@ const styles = StyleSheet.create({
   featuredImage: {
     width: '100%',
     height: 160,
-    backgroundColor: '#e5e7eb',
   },
   placeholderImage: {
     width: '100%',

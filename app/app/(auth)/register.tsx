@@ -5,7 +5,6 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -14,6 +13,7 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
@@ -23,10 +23,9 @@ import { darkColors, lightColors } from '@/themes/color';
 import { authStore } from '@/store/authStore';
 import { useGoogleAuthRequest } from '@/lib/googleAuth';
 
-const { width } = Dimensions.get('window');
-
 export default function RegisterScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
 
   const theme = themeStore((state) => state.theme);
   const colors = theme === 'dark' ? darkColors : lightColors;
@@ -227,7 +226,7 @@ export default function RegisterScreen() {
               </View>
 
               {error ? (
-                <Text style={styles.errorText}>{error}</Text>
+                <Text style={[styles.errorText, { color: colors.danger }]}>{error}</Text>
               ) : null}
 
               {/* Button */}
@@ -350,7 +349,6 @@ const styles = StyleSheet.create({
   input: { flex: 1, fontSize: 15 },
   errorText: {
     fontSize: 14,
-    color: '#e74c3c',
     marginTop: 12,
     textAlign: 'center',
   },

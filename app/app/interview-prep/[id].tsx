@@ -38,8 +38,6 @@ interface JobRoleDetail {
   topics: Topic[];
 }
 
-const ACCENT = '#8b5cf6';
-
 export default function InterviewPrepRoleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = themeStore(useShallow((state) => ({ theme: state.theme })));
@@ -74,7 +72,7 @@ export default function InterviewPrepRoleScreen() {
       <>
         <Stack.Screen options={{ headerShown: true, title: 'Interview Prep', headerBackTitle: 'Back' }} />
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
-          <ActivityIndicator color={ACCENT} style={styles.loader} />
+          <ActivityIndicator color={colors.primary} style={styles.loader} />
         </SafeAreaView>
       </>
     );
@@ -90,7 +88,7 @@ export default function InterviewPrepRoleScreen() {
             <Text style={[styles.emptyText, { color: colors.subText }]}>{error ?? 'Not found'}</Text>
             {upgradeRequired ? (
               <TouchableOpacity
-                style={[styles.upgradeBtn, { backgroundColor: ACCENT }]}
+                style={[styles.upgradeBtn, { backgroundColor: colors.primary }]}
                 onPress={() => router.push('/billing')}
                 activeOpacity={0.8}
               >
@@ -122,7 +120,7 @@ export default function InterviewPrepRoleScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={[styles.roleCard, { backgroundColor: colors.card }]}>
-            <View style={[styles.accentBar, { backgroundColor: ACCENT }]} />
+            <View style={[styles.accentBar, { backgroundColor: colors.primary }]} />
             <Text style={[styles.roleTitle, { color: colors.text }]}>{role.name}</Text>
             {role.description ? (
               <Text style={[styles.roleDesc, { color: colors.subText }]}>{role.description}</Text>
@@ -131,7 +129,7 @@ export default function InterviewPrepRoleScreen() {
 
           {role.topics.map((topic) => (
             <View key={topic.id} style={styles.section}>
-              <View style={[styles.topicHeader, { backgroundColor: ACCENT + '18', borderLeftColor: ACCENT }]}>
+              <View style={[styles.topicHeader, { backgroundColor: colors.primary + '18', borderLeftColor: colors.primary }]}>
                 <Text style={[styles.topicTitle, { color: colors.text }]}>{topic.name}</Text>
               </View>
               {topic.explanation ? (

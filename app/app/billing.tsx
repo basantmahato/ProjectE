@@ -5,7 +5,6 @@ import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Dimensions,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,12 +13,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import api from '@/lib/axios';
 import { authStore } from '@/store/authStore';
 import { themeStore } from '@/store/themeStore';
 import { darkColors, lightColors } from '@/themes/color';
-
-const CONTENT_MAX_WIDTH = 500;
 
 type Plan = {
   id: string;
@@ -86,9 +84,8 @@ export default function Billing() {
   const setUserAfterPayment = authStore((state) => state.setUserAfterPayment);
   const { openCheckout, RazorpayUI } = useRazorpay();
   const [loading, setLoading] = useState(false);
+  const { horizontalPadding, contentMaxWidth } = useResponsiveLayout();
 
-  const { width } = Dimensions.get('window');
-  const horizontalPadding = Math.min(Math.max(width * 0.05, 16), 24);
   const currentPlan = user ? PLANS.find((p) => p.id === user.plan) : undefined;
 
   const handleSelectPlan = async (planId: string) => {
@@ -177,7 +174,7 @@ export default function Billing() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { paddingHorizontal: horizontalPadding }]}
+        contentContainerStyle={[styles.scrollContent, { paddingHorizontal: horizontalPadding, maxWidth: contentMaxWidth }]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={[styles.subtitle, { color: colors.subText }]}>
@@ -319,7 +316,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 24,
     paddingBottom: 40,
-    maxWidth: CONTENT_MAX_WIDTH,
     alignSelf: 'center',
     width: '100%',
   },

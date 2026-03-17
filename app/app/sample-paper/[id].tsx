@@ -47,9 +47,6 @@ interface SamplePaperDetail {
   subjects: Subject[];
 }
 
-const ACCENT = '#3b82f6';
-const CORRECT = '#22c55e';
-
 export default function SamplePaperReadScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = themeStore(useShallow((state) => ({ theme: state.theme })));
@@ -80,7 +77,7 @@ export default function SamplePaperReadScreen() {
       <>
         <Stack.Screen options={{ headerShown: true, title: 'Sample Paper', headerBackTitle: 'Back' }} />
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
-          <ActivityIndicator color={ACCENT} style={styles.loader} />
+          <ActivityIndicator color={colors.primary} style={styles.loader} />
         </SafeAreaView>
       </>
     );
@@ -119,7 +116,7 @@ export default function SamplePaperReadScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={[styles.paperCard, { backgroundColor: colors.card }]}>
-            <View style={[styles.accentBar, { backgroundColor: ACCENT }]} />
+            <View style={[styles.accentBar, { backgroundColor: colors.primary }]} />
             <Text style={[styles.paperTitle, { color: colors.text }]}>{paper.title}</Text>
             {paper.description ? (
               <Text style={[styles.paperDesc, { color: colors.subText }]}>{paper.description}</Text>
@@ -128,7 +125,7 @@ export default function SamplePaperReadScreen() {
 
           {paper.subjects.map((subject) => (
             <View key={subject.id} style={styles.section}>
-              <View style={[styles.subjectHeader, { backgroundColor: ACCENT + '18', borderLeftColor: ACCENT }]}>
+              <View style={[styles.subjectHeader, { backgroundColor: colors.primary + '18', borderLeftColor: colors.primary }]}>
                 <Text style={[styles.subjectTitle, { color: colors.text }]}>{subject.name}</Text>
               </View>
 
@@ -147,13 +144,13 @@ export default function SamplePaperReadScreen() {
                             key={opt.id}
                             style={[
                               styles.optionRow,
-                              { backgroundColor: opt.isCorrect ? CORRECT + '18' : colors.background },
-                              opt.isCorrect && { borderLeftColor: CORRECT },
+                              { backgroundColor: opt.isCorrect ? colors.success + '18' : colors.background },
+                              opt.isCorrect && { borderLeftColor: colors.success },
                             ]}
                           >
                             <Text style={[styles.optionText, { color: colors.text }]}>{opt.optionText}</Text>
                             {opt.isCorrect && (
-                              <Text style={[styles.correctBadge, { color: CORRECT }]}>✓ Correct</Text>
+                              <Text style={[styles.correctBadge, { color: colors.success }]}>✓ Correct</Text>
                             )}
                           </View>
                         ))}

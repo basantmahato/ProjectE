@@ -22,8 +22,6 @@ interface JobRole {
   createdAt: string;
 }
 
-const ACCENT = '#8b5cf6';
-
 export default function InterviewPrepScreen() {
   const { theme } = themeStore(useShallow((state) => ({ theme: state.theme })));
   const dark = theme === 'dark';
@@ -57,9 +55,9 @@ export default function InterviewPrepScreen() {
       onPress={() => router.push(`/interview-prep/${item.id}`)}
       activeOpacity={0.75}
     >
-      <View style={[styles.accentBar, { backgroundColor: ACCENT }]} />
-      <View style={[styles.badge, { backgroundColor: ACCENT + '22' }]}>
-        <Text style={[styles.badgeText, { color: ACCENT }]}>Job Role</Text>
+      <View style={[styles.accentBar, { backgroundColor: colors.primary }]} />
+      <View style={[styles.badge, { backgroundColor: colors.primary + '22' }]}>
+        <Text style={[styles.badgeText, { color: colors.primary }]}>Job Role</Text>
       </View>
       <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
         {item.name}
@@ -69,7 +67,7 @@ export default function InterviewPrepScreen() {
           {item.description}
         </Text>
       ) : null}
-      <Text style={[styles.cta, { color: ACCENT }]}>View topics & subtopics →</Text>
+      <Text style={[styles.cta, { color: colors.primary }]}>View topics & subtopics →</Text>
     </TouchableOpacity>
   );
 
@@ -90,14 +88,14 @@ export default function InterviewPrepScreen() {
         edges={['bottom']}
       >
         {loading ? (
-          <ActivityIndicator color={ACCENT} style={styles.loader} />
+          <ActivityIndicator color={colors.primary} style={styles.loader} />
         ) : error ? (
           <View style={[styles.empty, { backgroundColor: colors.card }]}>
             <Text style={styles.emptyIcon}>⚠️</Text>
             <Text style={[styles.emptyText, { color: colors.subText }]}>{error}</Text>
             {upgradeRequired ? (
               <TouchableOpacity
-                style={[styles.upgradeBtn, { backgroundColor: ACCENT }]}
+                style={[styles.upgradeBtn, { backgroundColor: colors.primary }]}
                 onPress={() => router.push('/billing')}
                 activeOpacity={0.8}
               >

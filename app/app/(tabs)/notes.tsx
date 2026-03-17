@@ -26,8 +26,6 @@ interface Subject {
 const HORIZONTAL_PADDING_MIN = 16;
 const HORIZONTAL_PADDING_MAX = 24;
 const CONTENT_MAX_WIDTH = 600;
-const NOTES_ACCENT = '#10b981';
-
 export default function NotesTabScreen() {
   const { theme } = themeStore(useShallow((state) => ({ theme: state.theme })));
   const { width } = useWindowDimensions();
@@ -64,7 +62,7 @@ export default function NotesTabScreen() {
       onPress={() => router.push(`/notes/${item.id}` as any)}
       activeOpacity={0.7}
     >
-      <View style={[styles.accentStrip, { backgroundColor: NOTES_ACCENT }]} />
+      <View style={[styles.accentStrip, { backgroundColor: colors.primary }]} />
       <View style={styles.cardInner}>
         <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
           {item.name}
@@ -91,7 +89,7 @@ export default function NotesTabScreen() {
       />
       {loading ? (
         <View style={[styles.loaderWrap, contentPadding]}>
-          <ActivityIndicator color={NOTES_ACCENT} size="large" />
+          <ActivityIndicator color={colors.primary} size="large" />
           <Text style={[styles.loaderText, { color: colors.subText }]}>
             Loading subjects…
           </Text>

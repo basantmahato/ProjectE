@@ -55,8 +55,6 @@ interface CommentWithReplies {
   replies: CommentReply[];
 }
 
-const BLOG_ACCENT = '#0ea5e9';
-
 function formatDate(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleDateString(undefined, {
@@ -169,7 +167,7 @@ export default function BlogPostScreen() {
       <>
         <Stack.Screen options={{ headerShown: true, title: 'Blog', headerBackTitle: 'Back' }} />
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
-          <ActivityIndicator color={BLOG_ACCENT} style={styles.loader} />
+          <ActivityIndicator color={colors.primary} style={styles.loader} />
         </SafeAreaView>
       </>
     );
@@ -225,7 +223,7 @@ export default function BlogPostScreen() {
               <MaterialIcons
                 name={bookmarked ? 'bookmark' : 'bookmark-border'}
                 size={24}
-                color={bookmarked ? BLOG_ACCENT : colors.text}
+                color={bookmarked ? colors.primary : colors.text}
               />
             </TouchableOpacity>
           ),
@@ -245,7 +243,7 @@ export default function BlogPostScreen() {
           {post.featuredImage ? (
             <Image
               source={{ uri: post.featuredImage }}
-              style={styles.featuredImage}
+              style={[styles.featuredImage, { backgroundColor: colors.border }]}
               resizeMode="cover"
             />
           ) : null}
@@ -286,7 +284,7 @@ export default function BlogPostScreen() {
                   style={[
                     styles.submitBtn,
                     {
-                      backgroundColor: BLOG_ACCENT,
+                      backgroundColor: colors.primary,
                       opacity: commentText.trim() && !submittingComment ? 1 : 0.5,
                     },
                   ]}
@@ -321,7 +319,7 @@ export default function BlogPostScreen() {
                 {comment.replies.map((reply) => (
                   <View
                     key={reply.id}
-                    style={[styles.replyCard, { backgroundColor: colors.background, borderLeftColor: BLOG_ACCENT }]}
+                    style={[styles.replyCard, { backgroundColor: colors.background, borderLeftColor: colors.primary }]}
                   >
                     <View style={styles.replyHeader}>
                       <Text style={[styles.replyAuthor, { color: colors.text }]}>
@@ -357,7 +355,7 @@ export default function BlogPostScreen() {
                       style={[
                         styles.replySubmitBtn,
                         {
-                          backgroundColor: BLOG_ACCENT,
+                          backgroundColor: colors.primary,
                           opacity:
                             (replyTextByCommentId[comment.id]?.trim() && !submittingReplyId)
                               ? 1
@@ -393,7 +391,6 @@ const styles = StyleSheet.create({
   featuredImage: {
     width: '100%',
     height: 200,
-    backgroundColor: '#e5e7eb',
   },
   body: {
     padding: 16,

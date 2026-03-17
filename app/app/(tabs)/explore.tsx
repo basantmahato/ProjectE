@@ -27,9 +27,6 @@ const CONTENT_MAX_WIDTH = 600;
 const RECENT_ACTIVITIES_LIMIT = 10;
 
 // Purple for Team Player - theme-friendly accent (not in base palette)
-const ACHIEVEMENT_PURPLE_LIGHT = '#8b5cf6';
-const ACHIEVEMENT_PURPLE_DARK = '#a78bfa';
-
 interface PublishedTest {
   id: string;
   title: string;
@@ -79,7 +76,7 @@ export default function ExploreScreen() {
       { id: 'beginner', label: 'Beginner', icon: 'star' as const, requiredPoints: 100, accentColor: colors.accent },
       { id: 'code-master', label: 'Code Master', icon: 'code' as const, requiredPoints: 250, accentColor: colors.primary },
       { id: 'top-student', label: 'Top Student', icon: 'emoji-events' as const, requiredPoints: 500, accentColor: colors.success },
-      { id: 'team-player', label: 'Team Player', icon: 'workspace-premium' as const, requiredPoints: 1000, accentColor: dark ? ACHIEVEMENT_PURPLE_DARK : ACHIEVEMENT_PURPLE_LIGHT },
+      { id: 'team-player', label: 'Team Player', icon: 'workspace-premium' as const, requiredPoints: 1000, accentColor: colors.primary },
     ],
     [colors.accent, colors.primary, colors.success, dark]
   );
@@ -102,7 +99,7 @@ export default function ExploreScreen() {
         id: '3',
         title: 'Attended HTML Workshop',
         timeAgo: '2 days ago',
-        dotColor: dark ? ACHIEVEMENT_PURPLE_DARK : ACHIEVEMENT_PURPLE_LIGHT,
+        dotColor: colors.primary,
       },
     ],
     [colors.success, colors.primary, dark]

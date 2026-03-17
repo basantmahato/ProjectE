@@ -159,9 +159,9 @@ export default function Settings() {
                     <Switch
                       value={dark}
                       onValueChange={() => toggleTheme()}
-                      trackColor={{ false: '#555', true: colors.primary }}
+                      trackColor={{ false: colors.border, true: colors.primary }}
                       thumbColor="#fff"
-                      ios_backgroundColor="#555"
+                      ios_backgroundColor={colors.border}
                     />
                   ) : item.showSwitch && item.switchType === 'notification' ? (
                     <Switch
@@ -172,9 +172,9 @@ export default function Settings() {
                           registerPushTokenIfNeeded().catch(() => {});
                         }
                       }}
-                      trackColor={{ false: '#555', true: colors.primary }}
+                      trackColor={{ false: colors.border, true: colors.primary }}
                       thumbColor="#fff"
-                      ios_backgroundColor="#555"
+                      ios_backgroundColor={colors.border}
                     />
                   ) : item.showChevron ? (
                     <MaterialIcons name="chevron-right" size={24} color={colors.subText} />

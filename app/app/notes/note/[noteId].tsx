@@ -23,8 +23,6 @@ interface Note {
   updatedAt: string;
 }
 
-const NOTES_ACCENT = '#10b981';
-
 function formatDate(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleDateString(undefined, {
@@ -76,7 +74,7 @@ export default function NoteDetailScreen() {
         edges={['bottom']}
       >
         {loading ? (
-          <ActivityIndicator color={NOTES_ACCENT} style={styles.loader} />
+          <ActivityIndicator color={colors.primary} style={styles.loader} />
         ) : error ? (
           <View style={[styles.empty, { backgroundColor: colors.card }]}>
             <Text style={styles.emptyIcon}>⚠️</Text>

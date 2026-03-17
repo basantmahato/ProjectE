@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { darkColors, lightColors } from '@/themes/color';
 
@@ -24,8 +25,6 @@ interface Props {
   error: string | null;
   colors: typeof lightColors | typeof darkColors;
 }
-
-const ACCENT = '#10b981';
 
 function useCountdown(targetIso: string) {
   const getRemaining = () => {
@@ -54,8 +53,8 @@ function CountdownBadge({ scheduledAt, colors }: { scheduledAt: string; colors: 
 
   if (!r) {
     return (
-      <View style={[styles.countdownBadge, { backgroundColor: ACCENT + '20' }]}>
-        <Text style={[styles.countdownText, { color: ACCENT }]}>Starting now</Text>
+      <View style={[styles.countdownBadge, { backgroundColor: colors.primary + '20' }]}>
+        <Text style={[styles.countdownText, { color: colors.primary }]}>Starting now</Text>
       </View>
     );
   }
@@ -67,9 +66,9 @@ function CountdownBadge({ scheduledAt, colors }: { scheduledAt: string; colors: 
   if (r.days === 0)  parts.push(`${r.seconds}s`);
 
   return (
-    <View style={[styles.countdownBadge, { backgroundColor: ACCENT + '20' }]}>
-      <View style={[styles.dot, { backgroundColor: ACCENT }]} />
-      <Text style={[styles.countdownText, { color: ACCENT }]}>
+    <View style={[styles.countdownBadge, { backgroundColor: colors.primary + '20' }]}>
+      <View style={[styles.dot, { backgroundColor: colors.primary }]} />
+      <Text style={[styles.countdownText, { color: colors.primary }]}>
         Starts in {parts.join(' ')}
       </Text>
     </View>
@@ -77,13 +76,16 @@ function CountdownBadge({ scheduledAt, colors }: { scheduledAt: string; colors: 
 }
 
 export function UpcomingTestsSection({ tests, loading, error, colors }: Props) {
+  const { width } = useWindowDimensions();
+  const cardWidth = Math.min(220, Math.max(180, width * 0.55));
+
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Upcoming Tests</Text>
         {!loading && !error && (
-          <View style={[styles.badge, { backgroundColor: ACCENT + '20' }]}>
-            <Text style={[styles.badgeText, { color: ACCENT }]}>
+          <View style={[styles.badge, { backgroundColor: colors.primary + '20' }]}>
+            <Text style={[styles.badgeText, { color: colors.primary }]}>
               {tests.length} scheduled
             </Text>
           </View>
@@ -91,7 +93,7 @@ export function UpcomingTestsSection({ tests, loading, error, colors }: Props) {
       </View>
 
       {loading ? (
-        <ActivityIndicator color={ACCENT} style={styles.loader} />
+        <ActivityIndicator color={colors.primary} style={styles.loader} />
       ) : error ? (
         <View style={[styles.emptyState, { backgroundColor: colors.card }]}>
           <Text style={styles.emptyIcon}>⚠️</Text>
@@ -111,9 +113,9 @@ export function UpcomingTestsSection({ tests, loading, error, colors }: Props) {
           {tests.map((test) => (
             <View
               key={test.id}
-              style={[styles.card, { backgroundColor: colors.card }]}
+              style={[styles.card, { width: cardWidth, backgroundColor: colors.card }]}
             >
-              <View style={[styles.topBar, { backgroundColor: ACCENT }]} />
+              <View style={[styles.topBar, { backgroundColor: colors.primary }]} />
               <View style={styles.cardBody}>
                 <CountdownBadge scheduledAt={test.scheduledAt} colors={colors} />
 
@@ -206,7 +208,7 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   card: {
-    width: 220,
+    minWidth: 180,
     borderRadius: 18,
     overflow: 'hidden',
     shadowColor: '#000',

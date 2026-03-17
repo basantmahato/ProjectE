@@ -36,9 +36,6 @@ interface TestAttempt {
   score: number | null;
 }
 
-const MOCK_ACCENT = '#f59e0b';
-const DONE_GREEN = '#10b981';
-
 export default function MockTestsScreen() {
   const { theme } = themeStore(useShallow((state) => ({ theme: state.theme })));
   const isAuthenticated = authStore((state) => state.isAuthenticated);
@@ -103,10 +100,10 @@ export default function MockTestsScreen() {
         }
         activeOpacity={0.75}
       >
-        <View style={[styles.accentBar, { backgroundColor: isDone ? DONE_GREEN : MOCK_ACCENT }]} />
+        <View style={[styles.accentBar, { backgroundColor: isDone ? colors.success : colors.primary }]} />
         <View style={styles.badgeRow}>
-          <View style={[styles.mockBadge, { backgroundColor: (isDone ? DONE_GREEN : MOCK_ACCENT) + '22' }]}>
-            <Text style={[styles.mockBadgeText, { color: isDone ? DONE_GREEN : MOCK_ACCENT }]}>
+          <View style={[styles.mockBadge, { backgroundColor: (isDone ? colors.success : colors.primary) + '22' }]}>
+            <Text style={[styles.mockBadgeText, { color: isDone ? colors.success : colors.primary }]}>
               {isDone ? 'Done' : 'Mock Test'}
             </Text>
           </View>
@@ -131,14 +128,14 @@ export default function MockTestsScreen() {
             </Text>
           </View>
           {isDone && scorePercent != null ? (
-            <View style={[styles.pill, { backgroundColor: (scorePercent >= 60 ? DONE_GREEN : '#ef4444') + '22' }]}>
-              <Text style={[styles.pillText, { color: scorePercent >= 60 ? DONE_GREEN : '#ef4444' }]}>
+            <View style={[styles.pill, { backgroundColor: (scorePercent >= 60 ? colors.success : colors.danger) + '22' }]}>
+              <Text style={[styles.pillText, { color: scorePercent >= 60 ? colors.success : colors.danger }]}>
                 {attempt!.score}/{item.totalMarks}
               </Text>
             </View>
           ) : null}
         </View>
-        <Text style={[styles.cta, { color: isDone ? DONE_GREEN : MOCK_ACCENT }]}>
+        <Text style={[styles.cta, { color: isDone ? colors.success : colors.primary }]}>
           {isDone ? 'View result →' : 'Attempt now →'}
         </Text>
       </TouchableOpacity>
@@ -162,7 +159,7 @@ export default function MockTestsScreen() {
         edges={['bottom']}
       >
         {loading ? (
-          <ActivityIndicator color={MOCK_ACCENT} style={styles.loader} />
+          <ActivityIndicator color={colors.primary} style={styles.loader} />
         ) : error ? (
           <View style={[styles.empty, { backgroundColor: colors.card }]}>
             <Text style={styles.emptyIcon}>⚠️</Text>

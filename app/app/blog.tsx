@@ -27,8 +27,6 @@ interface BlogPostListItem {
   metaDescription: string | null;
 }
 
-const BLOG_ACCENT = '#0ea5e9';
-
 function formatDate(iso: string | null): string {
   if (!iso) return '';
   const d = new Date(iso);
@@ -71,12 +69,12 @@ export default function BlogScreen() {
       {item.featuredImage ? (
         <Image
           source={{ uri: item.featuredImage }}
-          style={styles.featuredImage}
+          style={[styles.featuredImage, { backgroundColor: colors.border }]}
           resizeMode="cover"
         />
       ) : (
-        <View style={[styles.placeholderImage, { backgroundColor: BLOG_ACCENT + '22' }]}>
-          <Text style={[styles.placeholderIcon, { color: BLOG_ACCENT }]}>📄</Text>
+        <View style={[styles.placeholderImage, { backgroundColor: colors.primary + '22' }]}>
+          <Text style={[styles.placeholderIcon, { color: colors.primary }]}>📄</Text>
         </View>
       )}
       <View style={styles.cardContent}>
@@ -91,7 +89,7 @@ export default function BlogScreen() {
         <Text style={[styles.date, { color: colors.subText }]}>
           {item.publishedAt ? formatDate(item.publishedAt) : 'Draft'}
         </Text>
-        <Text style={[styles.cta, { color: BLOG_ACCENT }]}>Read more →</Text>
+        <Text style={[styles.cta, { color: colors.primary }]}>Read more →</Text>
       </View>
     </TouchableOpacity>
   );
@@ -113,7 +111,7 @@ export default function BlogScreen() {
         edges={['bottom']}
       >
         {loading ? (
-          <ActivityIndicator color={BLOG_ACCENT} style={styles.loader} />
+          <ActivityIndicator color={colors.primary} style={styles.loader} />
         ) : error ? (
           <View style={[styles.empty, { backgroundColor: colors.card }]}>
             <Text style={styles.emptyIcon}>⚠️</Text>
@@ -161,7 +159,6 @@ const styles = StyleSheet.create({
   featuredImage: {
     width: '100%',
     height: 160,
-    backgroundColor: '#e5e7eb',
   },
   placeholderImage: {
     width: '100%',

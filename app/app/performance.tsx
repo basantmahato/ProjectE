@@ -38,8 +38,6 @@ interface PerformanceRow {
   submittedAt: string;
 }
 
-const ACCENT = '#ec4899';
-
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, {
     day: 'numeric',
@@ -119,7 +117,7 @@ export default function PerformanceScreen() {
 
   const renderItem = ({ item }: { item: PerformanceRow }) => (
     <View style={[styles.card, { backgroundColor: colors.card }]}>
-      <View style={[styles.accentBar, { backgroundColor: ACCENT }]} />
+      <View style={[styles.accentBar, { backgroundColor: colors.primary }]} />
       <View style={styles.cardBody}>
         <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
           {item.title}
@@ -162,7 +160,7 @@ export default function PerformanceScreen() {
         edges={['bottom']}
       >
         {loading ? (
-          <ActivityIndicator color={ACCENT} style={styles.loader} />
+          <ActivityIndicator color={colors.primary} style={styles.loader} />
         ) : !isAuthenticated ? (
           <View style={[styles.empty, { backgroundColor: colors.card }]}>
             <Text style={styles.emptyIcon}>📊</Text>

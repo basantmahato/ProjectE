@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -12,6 +11,7 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -54,7 +54,7 @@ export default function ProfileSettings() {
     }
   }, [user?.id]);
 
-  const { width } = Dimensions.get('window');
+  const { width } = useWindowDimensions();
   const horizontalPadding = Math.min(Math.max(width * 0.05, 16), 24);
 
   const handleSaveProfile = async () => {

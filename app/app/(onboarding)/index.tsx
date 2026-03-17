@@ -2,7 +2,6 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
-  Dimensions,
   FlatList,
   NativeSyntheticEvent,
   NativeScrollEvent,
@@ -10,14 +9,13 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { onboardingStore } from '@/store/onboardingStore';
 import { themeStore } from '@/store/themeStore';
 import { darkColors, lightColors } from '@/themes/color';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const SLIDES = [
   {
@@ -45,6 +43,7 @@ export default function OnboardingScreen() {
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
   const theme = themeStore((state) => state.theme);
   const colors = theme === 'dark' ? darkColors : lightColors;
   const complete = onboardingStore((state) => state.complete);

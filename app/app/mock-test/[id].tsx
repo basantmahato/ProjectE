@@ -26,8 +26,6 @@ interface MockTestDetail {
   createdAt: string;
 }
 
-const MOCK_ACCENT = '#f59e0b';
-
 const INFO_ITEMS = (test: MockTestDetail) => [
   { label: 'Duration', value: `${test.durationMinutes} minutes`, icon: '⏱' },
   { label: 'Total Marks', value: `${test.totalMarks}`, icon: '🏆' },
@@ -77,7 +75,7 @@ export default function MockTestDetailScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.centered, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={MOCK_ACCENT} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
   }
@@ -89,7 +87,7 @@ export default function MockTestDetailScreen() {
         <Text style={[styles.errorText, { color: colors.subText }]}>{error ?? 'Mock test not found.'}</Text>
         {upgradeRequired ? (
           <TouchableOpacity
-            style={[styles.upgradeBtn, { backgroundColor: MOCK_ACCENT }]}
+            style={[styles.upgradeBtn, { backgroundColor: colors.primary }]}
             onPress={() => router.push('/billing')}
             activeOpacity={0.8}
           >
@@ -119,7 +117,7 @@ export default function MockTestDetailScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.heroCard, { backgroundColor: MOCK_ACCENT }]}>
+        <View style={[styles.heroCard, { backgroundColor: colors.primary }]}>
           <Text style={styles.heroBadge}>Mock Test</Text>
           <Text style={styles.heroTitle}>{test.title}</Text>
         </View>
@@ -147,7 +145,7 @@ export default function MockTestDetailScreen() {
           ))}
         </View>
 
-        <View style={[styles.noteCard, { backgroundColor: MOCK_ACCENT + '18' }]}>
+        <View style={[styles.noteCard, { backgroundColor: colors.primary + '18' }]}>
           <Text style={styles.noteIcon}>💡</Text>
           <Text style={[styles.noteText, { color: colors.text }]}>
             Mock tests have no schedule — start whenever you're ready. Complete all questions and submit before time runs out.
@@ -159,7 +157,7 @@ export default function MockTestDetailScreen() {
         <TouchableOpacity
           style={[
             styles.startBtn,
-            { backgroundColor: MOCK_ACCENT },
+            { backgroundColor: colors.primary },
             starting && styles.startBtnDisabled,
           ]}
           onPress={handleStartTest}

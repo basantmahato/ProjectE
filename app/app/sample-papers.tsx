@@ -21,8 +21,6 @@ interface SamplePaper {
   createdAt: string;
 }
 
-const ACCENT = '#3b82f6';
-
 export default function SamplePapersScreen() {
   const { theme } = themeStore(useShallow((state) => ({ theme: state.theme })));
   const dark = theme === 'dark';
@@ -52,9 +50,9 @@ export default function SamplePapersScreen() {
       onPress={() => router.push(`/sample-paper/${item.id}`)}
       activeOpacity={0.75}
     >
-      <View style={[styles.accentBar, { backgroundColor: ACCENT }]} />
-      <View style={[styles.badge, { backgroundColor: ACCENT + '22' }]}>
-        <Text style={[styles.badgeText, { color: ACCENT }]}>Sample Paper</Text>
+      <View style={[styles.accentBar, { backgroundColor: colors.primary }]} />
+      <View style={[styles.badge, { backgroundColor: colors.primary + '22' }]}>
+        <Text style={[styles.badgeText, { color: colors.primary }]}>Sample Paper</Text>
       </View>
       <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
         {item.title}
@@ -64,7 +62,7 @@ export default function SamplePapersScreen() {
           {item.description}
         </Text>
       ) : null}
-      <Text style={[styles.cta, { color: ACCENT }]}>Read by subjects & topics →</Text>
+      <Text style={[styles.cta, { color: colors.primary }]}>Read by subjects & topics →</Text>
     </TouchableOpacity>
   );
 
@@ -85,7 +83,7 @@ export default function SamplePapersScreen() {
         edges={['bottom']}
       >
         {loading ? (
-          <ActivityIndicator color={ACCENT} style={styles.loader} />
+          <ActivityIndicator color={colors.primary} style={styles.loader} />
         ) : error ? (
           <View style={[styles.empty, { backgroundColor: colors.card }]}>
             <Text style={styles.emptyIcon}>⚠️</Text>

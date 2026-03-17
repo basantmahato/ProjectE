@@ -55,6 +55,15 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511",
+          "delayAppMeasurementInit": true,
+          "userTrackingUsageDescription": "This identifier is used to deliver personalized ads to you."
+        }
       ]
     ],
     "experiments": {

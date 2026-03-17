@@ -1,5 +1,5 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { Stack, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -16,8 +16,10 @@ export const unstable_settings = {
   anchor: '(auth)',
 };
 
-export default function RootLayout() {  
+export default function RootLayout() {
+  const segments = useSegments();
   const theme = themeStore((state) => state.theme);
+  const isTabScreen = segments[0] === '(tabs)';
   useEffect(() => {
     SplashScreen.hideAsync();
   }, []);
@@ -71,7 +73,13 @@ export default function RootLayout() {
         </Stack>
         <StatusBar
           style={theme === 'dark' ? 'light' : 'dark'}
-          backgroundColor={theme === 'dark' ? darkColors.background : lightColors.background}
+          backgroundColor={
+            isTabScreen
+              ? (theme === 'dark' ? darkColors.primary : lightColors.primary)
+              : theme === 'dark'
+                ? darkColors.background
+                : lightColors.background
+          }
         />
       </ThemeProvider>
     </SafeAreaProvider>
