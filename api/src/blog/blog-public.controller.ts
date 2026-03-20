@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Public } from '../auth/decorators/public.decorator';
 import { BlogService } from './blog.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { CreateReplyDto } from './dto/create-reply.dto';
@@ -19,6 +20,7 @@ import { CreateReplyDto } from './dto/create-reply.dto';
 export class BlogPublicController {
   constructor(private readonly blogService: BlogService) {}
 
+  @Public()
   @Get('posts')
   findPublishedPosts(
     @Query('page') page?: string,
@@ -32,16 +34,19 @@ export class BlogPublicController {
     return this.blogService.findPublishedPosts();
   }
 
+  @Public()
   @Get('posts/slug/:slug')
   findPublishedBySlug(@Param('slug') slug: string) {
     return this.blogService.findPublishedBySlug(slug);
   }
 
+  @Public()
   @Get('posts/:id')
   findPublishedById(@Param('id') id: string) {
     return this.blogService.findPublishedById(id);
   }
 
+  @Public()
   @Get('posts/:id/comments')
   getComments(@Param('id') postId: string) {
     return this.blogService.getCommentsWithReplies(postId);

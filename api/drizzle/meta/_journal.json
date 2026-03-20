@@ -246,6 +246,20 @@
       "when": 1773687035251,
       "tag": "0034_past_bruce_banner",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1774018373582,
+      "tag": "0035_busy_spitfire",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1774018955828,
+      "tag": "0036_colossal_justin_hammer",
+      "breakpoints": true
     }
   ]
 }

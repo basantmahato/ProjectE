@@ -2,8 +2,10 @@ import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { TestsService } from './tests.service';
 import { ApiTags } from '@nestjs/swagger';
 import { OptionalJwtGuard } from 'src/auth/optional-jwt.guard';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @ApiTags('Tests')
+@Public()
 @UseGuards(OptionalJwtGuard)
 @Controller('tests')
 export class TestsPublicController {

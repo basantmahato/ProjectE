@@ -1,6 +1,7 @@
 import { Controller, Get, Headers, Param, Req, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { OptionalJwtGuard } from 'src/auth/optional-jwt.guard';
+import { Public } from 'src/auth/decorators/public.decorator';
 import { SamplePapersService } from './sample-papers.service';
 
 interface RequestWithOptionalUser {
@@ -8,6 +9,7 @@ interface RequestWithOptionalUser {
 }
 
 @ApiTags('Sample Papers (Public)')
+@Public()
 @UseGuards(OptionalJwtGuard)
 @Controller('sample-papers')
 export class SamplePapersPublicController {

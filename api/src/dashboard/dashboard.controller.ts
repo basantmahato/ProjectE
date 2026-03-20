@@ -16,7 +16,6 @@ interface RequestWithUser {
 }
 
 @Controller('dashboard')
-@UseGuards(JwtAuthGuard)
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 

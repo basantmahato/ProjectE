@@ -21,13 +21,11 @@ export class BillingController {
   constructor(private readonly billingService: BillingService) {}
 
   @Post('order')
-  @UseGuards(JwtAuthGuard)
   async createOrder(@Req() req: RequestWithUser, @Body() dto: CreateOrderDto) {
     return this.billingService.createOrder(req.user.userId, dto.planId);
   }
 
   @Post('verify')
-  @UseGuards(JwtAuthGuard)
   async verifyPayment(
     @Req() req: RequestWithUser,
     @Body() dto: VerifyPaymentDto,

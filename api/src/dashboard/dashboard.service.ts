@@ -25,17 +25,19 @@ export interface LeaderboardEntry {
 
 @Injectable()
 export class DashboardService {
+  private adminStatsCache: { data: any; timestamp: number } | null = null;
+  private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
   async getStats(userId: string): Promise<DashboardStats> {
     const [user] = await db
       .select({ totalMarks: users.totalMarks })
       .from(users)
       .where(eq(users.id, userId));
 
-    const submitted = await db
+    const [stats] = await db
       .select({
-        score: testAttempts.score,
-        totalMarks: tests.totalMarks,
-        isMock: tests.isMock,
+        totalScore: sql<number>`COALESCE(SUM(${testAttempts.score}), 0)`,
+        totalPossible: sql<number>`COALESCE(SUM(${tests.totalMarks}), 0)`,
+        mockCount: sql<number>`COALESCE(SUM(CASE WHEN ${tests.isMock} = true THEN 1 ELSE 0 END), 0)::int`,
       })
       .from(testAttempts)
       .innerJoin(tests, eq(testAttempts.testId, tests.id))
@@ -43,14 +45,12 @@ export class DashboardService {
         and(eq(testAttempts.userId, userId), isNotNull(testAttempts.submittedAt))
       );
 
-    let accuracyPercent = 0;
-    if (submitted.length > 0) {
-      const totalScore = submitted.reduce((sum, r) => sum + (r.score ?? 0), 0);
-      const totalPossible = submitted.reduce((sum, r) => sum + (r.totalMarks ?? 0), 0);
-      accuracyPercent = totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) : 0;
-    }
+    const accuracyPercent =
+      Number(stats.totalPossible) > 0
+        ? Math.round((Number(stats.totalScore) / Number(stats.totalPossible)) * 100)
+        : 0;
 
-    const mockTestsTaken = submitted.filter((r) => r.isMock === true).length;
+    const mockTestsTaken = Number(stats.mockCount);
 
     return {
       totalMarks: user?.totalMarks ?? 0,
@@ -60,6 +60,11 @@ export class DashboardService {
   }
 
   async getAdminStats() {
+    const now = Date.now();
+    if (this.adminStatsCache && now - this.adminStatsCache.timestamp < this.CACHE_TTL_MS) {
+      return this.adminStatsCache.data;
+    }
+
     const count = sql<number>`count(*)::int`;
     const [[u], [s], [t], [q], [te], [mt], [bp], [n]] = await Promise.all([
       db.select({ count }).from(users),
@@ -71,7 +76,7 @@ export class DashboardService {
       db.select({ count }).from(blogPosts),
       db.select({ count }).from(notifications),
     ]);
-    return {
+    const data = {
       users: u?.count ?? 0,
       subjects: s?.count ?? 0,
       topics: t?.count ?? 0,
@@ -81,6 +86,9 @@ export class DashboardService {
       blogPosts: bp?.count ?? 0,
       notifications: n?.count ?? 0,
     };
+
+    this.adminStatsCache = { data, timestamp: now };
+    return data;
   }
 
   async getLeaderboard(limit = 100): Promise<LeaderboardEntry[]> {

@@ -231,10 +231,14 @@ export class AuthService {
   async changePassword(userId: string, dto: ChangePasswordDto) {
     const [user] = await db.select().from(users).where(eq(users.id, userId));
     if (!user) throw new NotFoundException("User not found");
-    if (!user.password) throw new UnauthorizedException("Account uses Google sign-in; set a password in account settings to use email login.");
 
-    const match = await bcrypt.compare(dto.currentPassword, user.password);
-    if (!match) throw new UnauthorizedException("Current password is incorrect");
+    if (user.password) {
+      if (!dto.currentPassword) {
+        throw new UnauthorizedException("Current password is required");
+      }
+      const match = await bcrypt.compare(dto.currentPassword, user.password);
+      if (!match) throw new UnauthorizedException("Current password is incorrect");
+    }
 
     const hashed = await bcrypt.hash(dto.newPassword, 10);
     await db.update(users).set({ password: hashed }).where(eq(users.id, userId));

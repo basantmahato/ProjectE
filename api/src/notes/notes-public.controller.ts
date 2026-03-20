@@ -1,10 +1,12 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Public } from '../auth/decorators/public.decorator';
 import { NotesService } from './notes.service';
 import { SubjectsService } from '../subjects/subjects.service';
 import { TopicsService } from '../topics/topics.service';
 
 @ApiTags('Notes (Public)')
+@Public()
 @Controller('notes')
 export class NotesPublicController {
   constructor(

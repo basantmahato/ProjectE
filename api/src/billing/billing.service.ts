@@ -3,6 +3,7 @@ import * as crypto from 'crypto';
 import Razorpay from 'razorpay';
 import { db } from '../database/db';
 import { users } from '../database/schema/user.schema';
+import { orders } from '../database/schema/order.schema';
 import { eq } from 'drizzle-orm';
 import { NotificationsService } from '../notifications/notifications.service';
 import type { PlanId } from './plan-features';
@@ -55,6 +56,14 @@ export class BillingService {
       currency: 'INR',
       receipt,
     });
+
+    await db.insert(orders).values({
+      userId,
+      planId,
+      razorpayOrderId: order.id,
+      status: 'pending',
+    });
+
     return {
       orderId: order.id,
       amount: amountPaise,
@@ -85,6 +94,24 @@ export class BillingService {
     if (expectedSignature !== razorpaySignature) {
       throw new BadRequestException('Invalid payment signature');
     }
+
+    const [existingOrder] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.razorpayOrderId, razorpayOrderId));
+
+    if (!existingOrder) {
+      throw new BadRequestException('Order not found');
+    }
+    if (existingOrder.status === 'completed') {
+      throw new BadRequestException('Order already processed');
+    }
+
+    await db
+      .update(orders)
+      .set({ status: 'completed' })
+      .where(eq(orders.razorpayOrderId, razorpayOrderId));
+
     const [updated] = await db
       .update(users)
       .set({ plan: planId as 'basic' | 'premium' })

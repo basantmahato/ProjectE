@@ -30,7 +30,8 @@
     "db:seed:interview-prep": "tsx scripts/seed-interview-prep.ts",
     "db:seed:blog": "tsx scripts/seed-blog.ts",
     "db:seed:notifications": "tsx scripts/seed-notifications.ts",
-    "db:seed:notes": "tsx scripts/seed-notes.ts"
+    "db:seed:notes": "tsx scripts/seed-notes.ts",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { OptionalJwtGuard } from 'src/auth/optional-jwt.guard';
+import { Public } from 'src/auth/decorators/public.decorator';
 import { BillingService } from '../billing/billing.service';
 import { InterviewPrepService } from './interview-prep.service';
 
@@ -16,6 +17,7 @@ interface RequestWithOptionalUser {
 }
 
 @ApiTags('Interview Prep (Public)')
+@Public()
 @UseGuards(OptionalJwtGuard)
 @Controller('interview-prep')
 export class InterviewPrepPublicController {

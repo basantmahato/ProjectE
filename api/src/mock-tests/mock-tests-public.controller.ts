@@ -2,8 +2,10 @@ import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { TestsService } from '../tests/tests.service';
 import { ApiTags } from '@nestjs/swagger';
 import { OptionalJwtGuard } from '../auth/optional-jwt.guard';
+import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('Mock Tests')
+@Public()
 @UseGuards(OptionalJwtGuard)
 @Controller('mock-tests')
 export class MockTestsPublicController {
