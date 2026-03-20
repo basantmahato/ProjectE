@@ -21,7 +21,7 @@ async function bootstrap() {
   const corsOrigin = process.env.CORS_ORIGIN?.trim();
   const allowedOrigins = corsOrigin
     ? corsOrigin.split(',').map((o) => o.trim()).filter(Boolean)
-    : [ 'https://web.basantmahato.in' , 'https://dashboard.basantmahato.in','http://localhost:3001', 'http://127.0.0.1:3001', 'http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:8001', , 'http://localhost:5174', 'http://localhost:5173' , 'http://localhost:3001', 'http://localhost:5174', 'http://localhost:5173'  ];
+    : [ 'https://web.basantmahato.in' , 'https://dashboard.basantmahato.in','http://localhost:3001', 'http://127.0.0.1:3001', 'http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:8001',  'http://localhost:5174', 'http://localhost:5173' , 'http://localhost:3001', 'http://localhost:5174', 'http://localhost:5173'  ];
 
   app.enableCors({
     origin: allowedOrigins.length > 0 ? allowedOrigins : true,
