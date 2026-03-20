@@ -17,9 +17,9 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build-time env vars (non-secret NEXT_PUBLIC_* values baked into the bundle)
-ARG NEXT_PUBLIC_API_URL
-ARG NEXT_PUBLIC_APP_URL
-ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ARG NEXT_PUBLIC_API_URL=https://api.basantmahato.in
+ARG NEXT_PUBLIC_APP_URL=https://web.basantmahato.in
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID=1018549727024-qd9g8a7mt77niinppquu2q6ulvho6e73.apps.googleusercontent.com
 
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL

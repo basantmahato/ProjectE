@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 // Backend URL for rewrites. /api/* is proxied here. API runs on 3000; run Next on 3001 to avoid conflict (see web package.json dev script).
 const apiProxyTarget =
-  process.env.API_PROXY_TARGET || "http://localhost:3000";
+  process.env.API_PROXY_TARGET || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 const nextConfig: NextConfig = {
   output: "standalone",
