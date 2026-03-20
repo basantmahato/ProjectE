@@ -42,4 +42,4 @@ USER nestjs
 EXPOSE 3000
 
 # All secrets/config must be passed as environment variables in Dokploy
-CMD ["node", "dist/main.ts"]
+CMD ["node", "dist/main.js"]
