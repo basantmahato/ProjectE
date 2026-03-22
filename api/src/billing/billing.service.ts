@@ -9,8 +9,8 @@ import { NotificationsService } from '../notifications/notifications.service';
 import type { PlanId } from './plan-features';
 
 const PLAN_AMOUNTS_PAISE: Record<string, number> = {
-  basic: 4900,
-  premium: 9900,
+  basic: 200,
+  premium: 400,
 };
 
 @Injectable()
