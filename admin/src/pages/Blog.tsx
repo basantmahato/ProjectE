@@ -40,7 +40,7 @@ export function Blog() {
 
   const { data: posts, isLoading, isError, refetch } = useQuery({
     queryKey: ['blog'],
-    queryFn: () => blogApi.list().then((r) => unwrapPaginated(r as { data: unknown })),
+    queryFn: () => blogApi.list().then((r) => unwrapPaginated<BlogPost>(r)),
   });
 
   const { data: editPost, isLoading: isLoadingEdit } = useQuery({

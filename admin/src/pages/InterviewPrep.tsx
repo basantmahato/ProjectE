@@ -363,7 +363,6 @@ export function InterviewPrep() {
                       <TopicCard
                         key={topic.id}
                         roleId={selectedRole.id}
-                        roleName={selectedRole.name}
                         topic={topic}
                         onEditTopic={() => setTopicModal({ roleId: selectedRole.id, roleName: selectedRole.name, topic })}
                         onDeleteTopic={() =>
@@ -575,7 +574,6 @@ export function InterviewPrep() {
 /** Fetches and displays subtopics for one topic */
 function TopicCard({
   roleId,
-  roleName,
   topic,
   onEditTopic,
   onDeleteTopic,
@@ -584,7 +582,6 @@ function TopicCard({
   onDeleteSubtopic,
 }: {
   roleId: string;
-  roleName: string;
   topic: TopicRow;
   onEditTopic: () => void;
   onDeleteTopic: () => void;

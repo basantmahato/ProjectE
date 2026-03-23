@@ -40,7 +40,7 @@ export function Tests() {
   const toast = useToast();
   const { data: tests, isLoading, isError, refetch } = useQuery({
     queryKey: ['tests'],
-    queryFn: () => testsApi.list().then((r) => unwrapPaginated(r as { data: unknown })),
+    queryFn: () => testsApi.list().then((r) => unwrapPaginated<TestRow>(r)),
   });
   const { data: testQuestions } = useQuery({
     queryKey: ['tests', manageTestId, 'questions'],
@@ -275,7 +275,7 @@ export function Tests() {
             </tr>
           </thead>
           <tbody>
-            {testList.map((t: { id: string; title: string; durationMinutes: number; totalMarks: number; isPublished?: boolean }) => (
+            {testList.map((t) => (
               <tr key={t.id} className="border-b border-slate-100 hover:bg-slate-50">
                 <td className="px-4 py-3 text-slate-800">{t.title}</td>
                 <td className="px-4 py-3 text-slate-600">{t.durationMinutes} min</td>

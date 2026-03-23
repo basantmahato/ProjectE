@@ -32,7 +32,7 @@ export function Notifications() {
 
   const { data: list, isLoading, isError, refetch } = useQuery({
     queryKey: ['notifications'],
-    queryFn: () => notificationsApi.list().then((r) => unwrapPaginated(r)),
+    queryFn: () => notificationsApi.list().then((r) => unwrapPaginated<NotificationRow>(r)),
   });
 
   const form = useForm<FormData>({

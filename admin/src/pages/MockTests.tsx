@@ -38,7 +38,7 @@ export function MockTests() {
   const toast = useToast();
   const { data: tests, isLoading, isError, refetch } = useQuery({
     queryKey: ['mock-tests'],
-    queryFn: () => mockTestsApi.list().then((r) => unwrapPaginated(r as { data: unknown })),
+    queryFn: () => mockTestsApi.list().then((r) => unwrapPaginated<MockTestRow>(r)),
   });
   const { data: testQuestions } = useQuery({
     queryKey: ['mock-tests', manageId, 'questions'],
@@ -279,7 +279,7 @@ export function MockTests() {
             </tr>
           </thead>
           <tbody>
-            {testList.map((t: MockTestRow) => (
+            {testList.map((t) => (
               <tr key={t.id} className="border-b border-slate-100 hover:bg-slate-50">
                 <td className="px-4 py-3 text-slate-800">{t.title}</td>
                 <td className="px-4 py-3 text-slate-600">{t.durationMinutes} min</td>

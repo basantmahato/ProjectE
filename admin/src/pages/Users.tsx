@@ -11,8 +11,8 @@ const createSchema = z.object({
   email: z.string().min(1, 'Email required').email('Invalid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   name: z.string().optional(),
-  role: z.enum(['user', 'admin']).default('user'),
-  plan: z.enum(['free', 'basic', 'premium']).default('free'),
+  role: z.enum(['user', 'admin']),
+  plan: z.enum(['free', 'basic', 'premium']),
 });
 
 const updateSchema = z.object({

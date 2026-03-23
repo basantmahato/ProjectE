@@ -11,11 +11,11 @@ export type PaginatedResponse<T> = {
   totalPages: number;
 };
 
-function unwrapPaginated<T>(r: { data: PaginatedResponse<T> | T[] }): T[] {
+function unwrapPaginated<T>(r: { data: unknown }): T[] {
   const body = r.data;
   if (body && typeof body === 'object' && 'data' in body && Array.isArray((body as PaginatedResponse<T>).data))
     return (body as PaginatedResponse<T>).data;
-  return Array.isArray(body) ? body : [];
+  return Array.isArray(body) ? (body as T[]) : [];
 }
 
 export const api = axios.create({

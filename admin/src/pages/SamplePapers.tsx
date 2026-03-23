@@ -415,7 +415,6 @@ export function SamplePapers() {
                       <SubjectCard
                         key={subject.id}
                         paperId={selectedPaper.id}
-                        paperTitle={selectedPaper.title}
                         subject={subject}
                         onEditSubject={() => setSubjectModal({ paperId: selectedPaper.id, paperTitle: selectedPaper.title, subject })}
                         onDeleteSubject={() => setDeleteSubjectTarget({ paperId: selectedPaper.id, id: subject.id, name: subject.name })}
@@ -574,7 +573,6 @@ export function SamplePapers() {
 
 function SubjectCard({
   paperId,
-  paperTitle,
   subject,
   onEditSubject,
   onDeleteSubject,
@@ -589,7 +587,6 @@ function SubjectCard({
   onDeleteOption,
 }: {
   paperId: string;
-  paperTitle: string;
   subject: SubjectRow;
   onEditSubject: () => void;
   onDeleteSubject: () => void;
@@ -629,7 +626,6 @@ function SubjectCard({
               paperId={paperId}
               subjectId={subject.id}
               topic={topic}
-              onAddTopic={onAddTopic}
               onEditTopic={() => onEditTopic(topic)}
               onDeleteTopic={() => onDeleteTopic(topic)}
               onAddQuestion={() => onAddQuestion(topic)}
@@ -650,7 +646,6 @@ function TopicCard({
   paperId,
   subjectId,
   topic,
-  onAddTopic,
   onEditTopic,
   onDeleteTopic,
   onAddQuestion,
@@ -663,7 +658,6 @@ function TopicCard({
   paperId: string;
   subjectId: string;
   topic: TopicRow;
-  onAddTopic: () => void;
   onEditTopic: () => void;
   onDeleteTopic: () => void;
   onAddQuestion: () => void;
@@ -786,7 +780,6 @@ function SubjectModal({
 }) {
   const isEdit = !!subject;
   const [name, setName] = useState(subject?.name ?? '');
-  const qc = useQueryClient();
 
   useEffect(() => {
     if (subject) setName(subject.name);
