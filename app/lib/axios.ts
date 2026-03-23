@@ -3,7 +3,7 @@ import axios, { AxiosError } from "axios";
 import { getDeviceId } from "@/lib/deviceId";
 
 const api = axios.create({
-  baseURL: "http://172.20.10.4:8000/",
+  baseURL: "https://api.basantmahato.in/",
 });
 
 const ACCESS_TOKEN_KEY = "access_token";

@@ -267,6 +267,13 @@
       "when": 1774224000000,
       "tag": "0037_wooden_molten_man",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1774280364478,
+      "tag": "0038_fast_galactus",
+      "breakpoints": true
     }
   ]
 }
