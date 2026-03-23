@@ -8,10 +8,12 @@ import { UpdateSubjectDto } from './dto/update-subject.dto';
 
 @Injectable()
 export class SubjectsService {
-
   async create(dto: CreateSubjectDto) {
     const slug = await ensureUniqueSlug(slugify(dto.name), async (s) => {
-      const [existing] = await db.select().from(subjects).where(eq(subjects.slug, s));
+      const [existing] = await db
+        .select()
+        .from(subjects)
+        .where(eq(subjects.slug, s));
       return !!existing;
     });
     const subject = await db
@@ -19,7 +21,7 @@ export class SubjectsService {
       .values({
         slug,
         name: dto.name,
-        examType: dto.examType
+        examType: dto.examType,
       })
       .returning();
 
@@ -31,10 +33,7 @@ export class SubjectsService {
   }
 
   async findOne(id: string) {
-    const subject = await db
-      .select()
-      .from(subjects)
-      .where(eq(subjects.id, id));
+    const subject = await db.select().from(subjects).where(eq(subjects.id, id));
 
     if (!subject.length) {
       throw new NotFoundException('Subject not found');

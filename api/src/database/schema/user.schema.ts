@@ -1,26 +1,31 @@
-import { pgTable, uuid, varchar, timestamp, pgEnum, integer } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  varchar,
+  timestamp,
+  pgEnum,
+  integer,
+} from 'drizzle-orm/pg-core';
 
-export const roleEnum = pgEnum("role", ["user", "admin"]);
-export const planEnum = pgEnum("plan", ["free", "basic", "premium"]);
+export const roleEnum = pgEnum('role', ['user', 'admin']);
+export const planEnum = pgEnum('plan', ['free', 'basic', 'premium']);
 
-export const users = pgTable("users", {
-  id: uuid("id").defaultRandom().primaryKey(),
+export const users = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
 
-  email: varchar("email", { length: 255 })
-    .notNull()
-    .unique(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
 
-  password: varchar("password", { length: 255 }),
+  password: varchar('password', { length: 255 }),
 
-  googleId: varchar("google_id", { length: 255 }).unique(),
+  googleId: varchar('google_id', { length: 255 }).unique(),
 
-  name: varchar("name", { length: 255 }),
+  name: varchar('name', { length: 255 }),
 
-  role: roleEnum("role").notNull().default("user"),
+  role: roleEnum('role').notNull().default('user'),
 
-  plan: planEnum("plan").notNull().default("free"),
+  plan: planEnum('plan').notNull().default('free'),
 
-  totalMarks: integer("total_marks").notNull().default(0),
+  totalMarks: integer('total_marks').notNull().default(0),
 
-  createdAt: timestamp("created_at").defaultNow()
+  createdAt: timestamp('created_at').defaultNow(),
 });

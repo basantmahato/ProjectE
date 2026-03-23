@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class BulkUploadSubtopicItemDto {
@@ -33,7 +39,10 @@ export class BulkUploadTopicItemDto {
   @IsNumber()
   orderIndex?: number;
 
-  @ApiPropertyOptional({ type: [BulkUploadSubtopicItemDto], description: 'Subtopics under this topic' })
+  @ApiPropertyOptional({
+    type: [BulkUploadSubtopicItemDto],
+    description: 'Subtopics under this topic',
+  })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
@@ -51,7 +60,10 @@ export class BulkUploadJobRoleItemDto {
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional({ type: [BulkUploadTopicItemDto], description: 'Topics under this job role' })
+  @ApiPropertyOptional({
+    type: [BulkUploadTopicItemDto],
+    description: 'Topics under this job role',
+  })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
@@ -61,7 +73,8 @@ export class BulkUploadJobRoleItemDto {
 
 export class BulkUploadInterviewPrepDto {
   @ApiProperty({
-    description: 'Array of job roles to create (each with optional topics and subtopics)',
+    description:
+      'Array of job roles to create (each with optional topics and subtopics)',
     type: [BulkUploadJobRoleItemDto],
   })
   @IsArray()

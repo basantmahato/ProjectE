@@ -9,7 +9,9 @@ import { QuestionOptionsService } from '../question-options/question-options.ser
 
 @Injectable()
 export class QuestionBankService {
-  constructor(private readonly questionOptionsService: QuestionOptionsService) {}
+  constructor(
+    private readonly questionOptionsService: QuestionOptionsService,
+  ) {}
 
   async create(dto: CreateQuestionBankDto) {
     const question = await db

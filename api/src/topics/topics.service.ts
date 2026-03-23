@@ -36,10 +36,7 @@ export class TopicsService {
   }
 
   async findOne(id: string) {
-    const topic = await db
-      .select()
-      .from(topics)
-      .where(eq(topics.id, id));
+    const topic = await db.select().from(topics).where(eq(topics.id, id));
 
     if (!topic.length) {
       throw new NotFoundException('Topic not found');
@@ -49,10 +46,7 @@ export class TopicsService {
   }
 
   async findBySubjectId(subjectId: string) {
-    return db
-      .select()
-      .from(topics)
-      .where(eq(topics.subjectId, subjectId));
+    return db.select().from(topics).where(eq(topics.subjectId, subjectId));
   }
 
   async findOneBySubjectIdAndSlug(subjectId: string, slug: string) {
@@ -64,7 +58,10 @@ export class TopicsService {
     return topic;
   }
 
-  async findOneBySubjectSlugAndTopicSlug(subjectSlug: string, topicSlug: string) {
+  async findOneBySubjectSlugAndTopicSlug(
+    subjectSlug: string,
+    topicSlug: string,
+  ) {
     const subject = await this.subjectsService.findOneBySlug(subjectSlug);
     return this.findOneBySubjectIdAndSlug(subject.id, topicSlug);
   }
@@ -87,10 +84,7 @@ export class TopicsService {
   }
 
   async remove(id: string) {
-    const topic = await db
-      .delete(topics)
-      .where(eq(topics.id, id))
-      .returning();
+    const topic = await db.delete(topics).where(eq(topics.id, id)).returning();
 
     if (!topic.length) {
       throw new NotFoundException('Topic not found');

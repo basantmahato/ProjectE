@@ -1,5 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsBoolean, IsNumber, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class BulkUploadOptionDto {
@@ -7,7 +15,10 @@ export class BulkUploadOptionDto {
   @IsString()
   optionText: string;
 
-  @ApiPropertyOptional({ description: 'Whether this option is correct', example: true })
+  @ApiPropertyOptional({
+    description: 'Whether this option is correct',
+    example: true,
+  })
   @IsOptional()
   @IsBoolean()
   isCorrect?: boolean;
@@ -18,7 +29,10 @@ export class BulkUploadQuestionDto {
   @IsString()
   questionText: string;
 
-  @ApiPropertyOptional({ description: 'Difficulty', enum: ['easy', 'medium', 'hard'] })
+  @ApiPropertyOptional({
+    description: 'Difficulty',
+    enum: ['easy', 'medium', 'hard'],
+  })
   @IsOptional()
   @IsString()
   difficulty?: string;
@@ -38,7 +52,10 @@ export class BulkUploadQuestionDto {
   @IsString()
   explanation?: string;
 
-  @ApiPropertyOptional({ description: 'Options for this question', type: [BulkUploadOptionDto] })
+  @ApiPropertyOptional({
+    description: 'Options for this question',
+    type: [BulkUploadOptionDto],
+  })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
@@ -47,7 +64,10 @@ export class BulkUploadQuestionDto {
 }
 
 export class BulkUploadQuestionsDto {
-  @ApiProperty({ description: 'Topic ID to attach all questions to', example: 'uuid' })
+  @ApiProperty({
+    description: 'Topic ID to attach all questions to',
+    example: 'uuid',
+  })
   @IsUUID()
   topicId: string;
 

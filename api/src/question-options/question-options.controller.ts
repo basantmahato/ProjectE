@@ -21,7 +21,9 @@ import { Role } from 'src/auth/decorators/roles.decorator';
 @Role('admin')
 @Controller('question-options')
 export class QuestionOptionsController {
-  constructor(private readonly questionOptionsService: QuestionOptionsService) {}
+  constructor(
+    private readonly questionOptionsService: QuestionOptionsService,
+  ) {}
 
   @Post()
   create(@Body() dto: CreateQuestionOptionDto) {

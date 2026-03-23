@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Param, Delete, Patch, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
 import { SubjectsService } from './subjects.service';
 import { CreateSubjectDto } from './dto/create-subject.dto';
 import { UpdateSubjectDto } from './dto/update-subject.dto';
@@ -7,15 +16,13 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Role } from 'src/auth/decorators/roles.decorator';
 
-
 @ApiTags('Subjects')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Role("admin")
+@Role('admin')
 @Controller('subjects')
 export class SubjectsController {
-
   constructor(private readonly subjectsService: SubjectsService) {}
-  
+
   @Post()
   create(@Body() dto: CreateSubjectDto) {
     return this.subjectsService.create(dto);

@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsBoolean, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class BulkSamplePaperOptionDto {
@@ -7,14 +14,20 @@ export class BulkSamplePaperOptionDto {
   @IsString()
   optionText: string;
 
-  @ApiPropertyOptional({ description: 'Whether this option is correct', example: true })
+  @ApiPropertyOptional({
+    description: 'Whether this option is correct',
+    example: true,
+  })
   @IsOptional()
   @IsBoolean()
   isCorrect?: boolean;
 }
 
 export class BulkSamplePaperQuestionDto {
-  @ApiProperty({ description: 'Question text', example: 'What is the unit of force?' })
+  @ApiProperty({
+    description: 'Question text',
+    example: 'What is the unit of force?',
+  })
   @IsString()
   questionText: string;
 
@@ -28,7 +41,10 @@ export class BulkSamplePaperQuestionDto {
   @IsNumber()
   orderIndex?: number;
 
-  @ApiPropertyOptional({ type: [BulkSamplePaperOptionDto], description: 'Answer options' })
+  @ApiPropertyOptional({
+    type: [BulkSamplePaperOptionDto],
+    description: 'Answer options',
+  })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
@@ -41,7 +57,10 @@ export class BulkSamplePaperTopicDto {
   @IsString()
   name: string;
 
-  @ApiPropertyOptional({ type: [BulkSamplePaperQuestionDto], description: 'Questions under this topic' })
+  @ApiPropertyOptional({
+    type: [BulkSamplePaperQuestionDto],
+    description: 'Questions under this topic',
+  })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
@@ -54,7 +73,10 @@ export class BulkSamplePaperSubjectDto {
   @IsString()
   name: string;
 
-  @ApiPropertyOptional({ type: [BulkSamplePaperTopicDto], description: 'Topics under this subject' })
+  @ApiPropertyOptional({
+    type: [BulkSamplePaperTopicDto],
+    description: 'Topics under this subject',
+  })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
@@ -63,12 +85,17 @@ export class BulkSamplePaperSubjectDto {
 }
 
 export class BulkSamplePaperItemDto {
-  @ApiPropertyOptional({ description: 'URL-friendly slug (unique). If omitted, derived from title.' })
+  @ApiPropertyOptional({
+    description: 'URL-friendly slug (unique). If omitted, derived from title.',
+  })
   @IsOptional()
   @IsString()
   slug?: string;
 
-  @ApiProperty({ description: 'Sample paper title', example: 'JEE Main 2025 Sample' })
+  @ApiProperty({
+    description: 'Sample paper title',
+    example: 'JEE Main 2025 Sample',
+  })
   @IsString()
   title: string;
 
@@ -77,7 +104,10 @@ export class BulkSamplePaperItemDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ type: [BulkSamplePaperSubjectDto], description: 'Subjects with topics and questions' })
+  @ApiProperty({
+    type: [BulkSamplePaperSubjectDto],
+    description: 'Subjects with topics and questions',
+  })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => BulkSamplePaperSubjectDto)
@@ -86,7 +116,8 @@ export class BulkSamplePaperItemDto {
 
 export class BulkUploadSamplePapersDto {
   @ApiProperty({
-    description: 'Array of sample papers to create (each with subjects → topics → questions → options)',
+    description:
+      'Array of sample papers to create (each with subjects → topics → questions → options)',
     type: [BulkSamplePaperItemDto],
   })
   @IsArray()

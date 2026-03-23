@@ -4,14 +4,16 @@
  */
 export function slugify(title: string): string {
   if (!title || typeof title !== 'string') return '';
-  return title
-    .toLowerCase()
-    .trim()
-    .replace(/[^\p{L}\p{N}\s-]/gu, '') // remove non-letters, non-numbers (keep unicode letters/numbers)
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-') // collapse multiple hyphens
-    .replace(/^-|-$/g, '') // trim leading/trailing hyphens
-    || 'untitled';
+  return (
+    title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\p{L}\p{N}\s-]/gu, '') // remove non-letters, non-numbers (keep unicode letters/numbers)
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-') // collapse multiple hyphens
+      .replace(/^-|-$/g, '') || // trim leading/trailing hyphens
+    'untitled'
+  );
 }
 
 /**

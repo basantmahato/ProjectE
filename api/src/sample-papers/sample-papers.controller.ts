@@ -148,7 +148,9 @@ export class SamplePapersController {
   }
 
   // --- Question Options (answers) ---
-  @Post(':paperId/subjects/:subjectId/topics/:topicId/questions/:questionId/options')
+  @Post(
+    ':paperId/subjects/:subjectId/topics/:topicId/questions/:questionId/options',
+  )
   createOption(
     @Param('questionId') questionId: string,
     @Body() dto: CreateSamplePaperQuestionOptionDto,
@@ -156,12 +158,16 @@ export class SamplePapersController {
     return this.samplePapersService.createOption(questionId, dto);
   }
 
-  @Get(':paperId/subjects/:subjectId/topics/:topicId/questions/:questionId/options')
+  @Get(
+    ':paperId/subjects/:subjectId/topics/:topicId/questions/:questionId/options',
+  )
   findOptions(@Param('questionId') questionId: string) {
     return this.samplePapersService.findOptionsByQuestionId(questionId);
   }
 
-  @Patch(':paperId/subjects/:subjectId/topics/:topicId/questions/:questionId/options/:optionId')
+  @Patch(
+    ':paperId/subjects/:subjectId/topics/:topicId/questions/:questionId/options/:optionId',
+  )
   updateOption(
     @Param('optionId') optionId: string,
     @Body() dto: UpdateSamplePaperQuestionOptionDto,
@@ -169,7 +175,9 @@ export class SamplePapersController {
     return this.samplePapersService.updateOption(optionId, dto);
   }
 
-  @Delete(':paperId/subjects/:subjectId/topics/:topicId/questions/:questionId/options/:optionId')
+  @Delete(
+    ':paperId/subjects/:subjectId/topics/:topicId/questions/:questionId/options/:optionId',
+  )
   removeOption(@Param('optionId') optionId: string) {
     return this.samplePapersService.removeOption(optionId);
   }

@@ -1,8 +1,18 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsOptional, IsString, IsUUID, IsNotEmpty, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsOptional,
+  IsString,
+  IsUUID,
+  IsNotEmpty,
+  MinLength,
+} from 'class-validator';
 
 export class CreateQuestionOptionDto {
-  @ApiProperty({ description: 'Question ID (from question bank)', example: 'uuid' })
+  @ApiProperty({
+    description: 'Question ID (from question bank)',
+    example: 'uuid',
+  })
   @IsUUID()
   @IsNotEmpty()
   questionId: string;
@@ -13,7 +23,10 @@ export class CreateQuestionOptionDto {
   @MinLength(1, { message: 'Option text is required' })
   optionText: string;
 
-  @ApiPropertyOptional({ description: 'Whether this option is correct', example: true })
+  @ApiPropertyOptional({
+    description: 'Whether this option is correct',
+    example: true,
+  })
   @IsOptional()
   @IsBoolean()
   isCorrect?: boolean;

@@ -1,22 +1,22 @@
-import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { topics } from "./topics.schema";
+import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { topics } from './topics.schema';
 
-export const questionBank = pgTable("question_bank", {
-  id: uuid("id").defaultRandom().primaryKey(),
+export const questionBank = pgTable('question_bank', {
+  id: uuid('id').defaultRandom().primaryKey(),
 
-  topicId: uuid("topic_id")
-    .references(() => topics.id, { onDelete: "cascade" })
+  topicId: uuid('topic_id')
+    .references(() => topics.id, { onDelete: 'cascade' })
     .notNull(),
 
-  questionText: text("question_text").notNull(),
+  questionText: text('question_text').notNull(),
 
-  difficulty: text("difficulty"), // easy | medium | hard
+  difficulty: text('difficulty'), // easy | medium | hard
 
-  marks: integer("marks").default(1),
+  marks: integer('marks').default(1),
 
-  negativeMarks: integer("negative_marks").default(0),
+  negativeMarks: integer('negative_marks').default(0),
 
-  explanation: text("explanation"),
+  explanation: text('explanation'),
 
-  createdAt: timestamp("created_at").defaultNow()
+  createdAt: timestamp('created_at').defaultNow(),
 });

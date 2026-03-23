@@ -42,7 +42,8 @@ export class InterviewPrepPublicController {
       : 'free';
     if (plan === 'free') {
       throw new ForbiddenException({
-        message: 'Interview prep requires Basic or Premium. Upgrade your plan to access.',
+        message:
+          'Interview prep requires Basic or Premium. Upgrade your plan to access.',
         code: 'PLAN_UPGRADE_REQUIRED',
       });
     }

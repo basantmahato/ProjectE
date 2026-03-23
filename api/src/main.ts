@@ -12,7 +12,10 @@ async function bootstrap() {
   // ✅ Clean allowed origins
   const corsOrigin = process.env.CORS_ORIGIN?.trim();
   const allowedOrigins = corsOrigin
-    ? corsOrigin.split(',').map((o) => o.trim()).filter(Boolean)
+    ? corsOrigin
+        .split(',')
+        .map((o) => o.trim())
+        .filter(Boolean)
     : [
         'https://web.basantmahato.in',
         'https://dashboard.basantmahato.in',

@@ -25,7 +25,9 @@ export const blogPosts = pgTable('blog_posts', {
 
   isPublished: boolean('is_published').notNull().default(false),
   publishedAt: timestamp('published_at'),
-  authorId: uuid('author_id').references(() => users.id, { onDelete: 'set null' }),
+  authorId: uuid('author_id').references(() => users.id, {
+    onDelete: 'set null',
+  }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

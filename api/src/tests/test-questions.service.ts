@@ -7,7 +7,11 @@ import { eq, and, inArray } from 'drizzle-orm';
 
 @Injectable()
 export class TestQuestionsService {
-  async addQuestion(testId: string, questionId: string, questionOrder?: number) {
+  async addQuestion(
+    testId: string,
+    questionId: string,
+    questionOrder?: number,
+  ) {
     const row = await db
       .insert(testQuestions)
       .values({

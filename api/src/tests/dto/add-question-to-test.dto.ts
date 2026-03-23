@@ -2,7 +2,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNumber, IsOptional, IsUUID, IsNotEmpty } from 'class-validator';
 
 export class AddQuestionToTestDto {
-  @ApiProperty({ description: 'Question ID from question bank', example: 'uuid' })
+  @ApiProperty({
+    description: 'Question ID from question bank',
+    example: 'uuid',
+  })
   @IsUUID()
   @IsNotEmpty()
   questionId: string;

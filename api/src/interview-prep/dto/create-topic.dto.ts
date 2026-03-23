@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString, IsNotEmpty, MinLength } from 'class-validator';
+import {
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsNotEmpty,
+  MinLength,
+} from 'class-validator';
 
 export class CreateInterviewPrepTopicDto {
   @ApiProperty({ description: 'Topic name', example: 'React' })

@@ -1,9 +1,9 @@
-import "dotenv/config";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
-import { Logger } from "@nestjs/common";
+import 'dotenv/config';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
+import { Logger } from '@nestjs/common';
 
-const logger = new Logger("Database");
+const logger = new Logger('Database');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -13,6 +13,6 @@ const pool = new Pool({
   ssl: false, // ✅ FIX
 });
 
-logger.log("Database pool created");
+logger.log('Database pool created');
 
 export const db = drizzle(pool);

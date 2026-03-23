@@ -1,4 +1,11 @@
-import { Controller, Get, Headers, Param, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Headers,
+  Param,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { OptionalJwtGuard } from 'src/auth/optional-jwt.guard';
 import { Public } from 'src/auth/decorators/public.decorator';

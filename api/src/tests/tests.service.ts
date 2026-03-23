@@ -49,7 +49,13 @@ export class TestsService {
     const total = countResult?.count ?? 0;
 
     const data = await db.select().from(tests).limit(limitNum).offset(offset);
-    return { data, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) || 1 };
+    return {
+      data,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum) || 1,
+    };
   }
 
   async findPublished(page = 1, limit = 20) {
@@ -76,7 +82,13 @@ export class TestsService {
       .where(condition)
       .limit(limitNum)
       .offset(offset);
-    return { data, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) || 1 };
+    return {
+      data,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum) || 1,
+    };
   }
 
   async createMock(dto: CreateMockTestDto) {
@@ -119,7 +131,13 @@ export class TestsService {
       .where(eq(tests.isMock, true))
       .limit(limitNum)
       .offset(offset);
-    return { data, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) || 1 };
+    return {
+      data,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum) || 1,
+    };
   }
 
   async findOneMock(id: string) {
@@ -147,7 +165,11 @@ export class TestsService {
       .select()
       .from(tests)
       .where(
-        and(eq(tests.id, id), eq(tests.isMock, true), eq(tests.isPublished, true)),
+        and(
+          eq(tests.id, id),
+          eq(tests.isMock, true),
+          eq(tests.isPublished, true),
+        ),
       );
 
     if (!test.length) {
@@ -158,10 +180,7 @@ export class TestsService {
   }
 
   async findOnePublishedBySlug(slug: string) {
-    const [test] = await db
-      .select()
-      .from(tests)
-      .where(eq(tests.slug, slug));
+    const [test] = await db.select().from(tests).where(eq(tests.slug, slug));
 
     if (!test || !test.isPublished || test.isMock) {
       throw new NotFoundException('Test not found');
@@ -181,7 +200,11 @@ export class TestsService {
       .select()
       .from(tests)
       .where(
-        and(eq(tests.slug, slug), eq(tests.isMock, true), eq(tests.isPublished, true)),
+        and(
+          eq(tests.slug, slug),
+          eq(tests.isMock, true),
+          eq(tests.isPublished, true),
+        ),
       );
     if (!test) throw new NotFoundException('Mock test not found');
     return test;
@@ -194,7 +217,9 @@ export class TestsService {
       .set({
         ...(dto.title != null && { title: dto.title }),
         ...(dto.description != null && { description: dto.description }),
-        ...(dto.durationMinutes != null && { durationMinutes: dto.durationMinutes }),
+        ...(dto.durationMinutes != null && {
+          durationMinutes: dto.durationMinutes,
+        }),
         ...(dto.totalMarks != null && { totalMarks: dto.totalMarks }),
         ...(dto.isPublished != null && { isPublished: dto.isPublished }),
       })
@@ -238,10 +263,7 @@ export class TestsService {
 
   async findOnePublished(id: string) {
     const now = new Date();
-    const test = await db
-      .select()
-      .from(tests)
-      .where(eq(tests.id, id));
+    const test = await db.select().from(tests).where(eq(tests.id, id));
 
     if (!test.length || !test[0].isPublished) {
       throw new NotFoundException('Test not found');
@@ -259,10 +281,7 @@ export class TestsService {
   }
 
   async findOne(id: string) {
-    const test = await db
-      .select()
-      .from(tests)
-      .where(eq(tests.id, id));
+    const test = await db.select().from(tests).where(eq(tests.id, id));
 
     if (!test.length) {
       throw new NotFoundException('Test not found');
@@ -277,11 +296,17 @@ export class TestsService {
       .set({
         ...(dto.title != null && { title: dto.title }),
         ...(dto.description != null && { description: dto.description }),
-        ...(dto.durationMinutes != null && { durationMinutes: dto.durationMinutes }),
+        ...(dto.durationMinutes != null && {
+          durationMinutes: dto.durationMinutes,
+        }),
         ...(dto.totalMarks != null && { totalMarks: dto.totalMarks }),
         ...(dto.isPublished != null && { isPublished: dto.isPublished }),
-        ...(dto.scheduledAt !== undefined && { scheduledAt: dto.scheduledAt ? new Date(dto.scheduledAt) : null }),
-        ...(dto.expiresAt !== undefined && { expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null }),
+        ...(dto.scheduledAt !== undefined && {
+          scheduledAt: dto.scheduledAt ? new Date(dto.scheduledAt) : null,
+        }),
+        ...(dto.expiresAt !== undefined && {
+          expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
+        }),
       })
       .where(eq(tests.id, id))
       .returning();
@@ -294,10 +319,7 @@ export class TestsService {
   }
 
   async remove(id: string) {
-    const test = await db
-      .delete(tests)
-      .where(eq(tests.id, id))
-      .returning();
+    const test = await db.delete(tests).where(eq(tests.id, id)).returning();
 
     if (!test.length) {
       throw new NotFoundException('Test not found');
@@ -314,10 +336,16 @@ export class TestsService {
       for (let i = 0; i < dto.tests.length; i++) {
         try {
           const item = dto.tests[i];
-          const slug = await ensureUniqueSlug(slugify(item.title), async (s) => {
-            const [existing] = await tx.select().from(tests).where(eq(tests.slug, s));
-            return !!existing;
-          });
+          const slug = await ensureUniqueSlug(
+            slugify(item.title),
+            async (s) => {
+              const [existing] = await tx
+                .select()
+                .from(tests)
+                .where(eq(tests.slug, s));
+              return !!existing;
+            },
+          );
           await tx.insert(tests).values({
             slug,
             title: item.title,
@@ -347,10 +375,16 @@ export class TestsService {
       for (let i = 0; i < dto.mockTests.length; i++) {
         const item = dto.mockTests[i];
         try {
-          const slug = await ensureUniqueSlug(slugify(item.title), async (s) => {
-            const [existing] = await tx.select().from(tests).where(eq(tests.slug, s));
-            return !!existing;
-          });
+          const slug = await ensureUniqueSlug(
+            slugify(item.title),
+            async (s) => {
+              const [existing] = await tx
+                .select()
+                .from(tests)
+                .where(eq(tests.slug, s));
+              return !!existing;
+            },
+          );
           const [mock] = await tx
             .insert(tests)
             .values({

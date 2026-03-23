@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString, IsUUID, IsNotEmpty, MinLength } from 'class-validator';
+import {
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  IsNotEmpty,
+  MinLength,
+} from 'class-validator';
 
 export class CreateQuestionBankDto {
   @ApiProperty({ description: 'Topic ID', example: 'uuid' })
@@ -13,7 +20,11 @@ export class CreateQuestionBankDto {
   @MinLength(1, { message: 'Question text is required' })
   questionText: string;
 
-  @ApiPropertyOptional({ description: 'Difficulty', example: 'easy', enum: ['easy', 'medium', 'hard'] })
+  @ApiPropertyOptional({
+    description: 'Difficulty',
+    example: 'easy',
+    enum: ['easy', 'medium', 'hard'],
+  })
   @IsOptional()
   @IsString()
   difficulty?: string;
@@ -28,7 +39,10 @@ export class CreateQuestionBankDto {
   @IsNumber()
   negativeMarks?: number;
 
-  @ApiPropertyOptional({ description: 'Explanation', example: 'Basic addition' })
+  @ApiPropertyOptional({
+    description: 'Explanation',
+    example: 'Basic addition',
+  })
   @IsOptional()
   @IsString()
   explanation?: string;

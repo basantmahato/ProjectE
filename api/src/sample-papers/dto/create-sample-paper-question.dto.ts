@@ -1,8 +1,17 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString, IsNotEmpty, MinLength } from 'class-validator';
+import {
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsNotEmpty,
+  MinLength,
+} from 'class-validator';
 
 export class CreateSamplePaperQuestionDto {
-  @ApiProperty({ description: 'Question text', example: 'What is the unit of force?' })
+  @ApiProperty({
+    description: 'Question text',
+    example: 'What is the unit of force?',
+  })
   @IsString()
   @IsNotEmpty()
   @MinLength(1, { message: 'Question text is required' })

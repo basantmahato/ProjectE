@@ -85,7 +85,10 @@ export class InterviewPrepService {
       .select()
       .from(interviewPrepTopics)
       .where(eq(interviewPrepTopics.jobRoleId, jobRoleId))
-      .orderBy(asc(interviewPrepTopics.orderIndex), asc(interviewPrepTopics.createdAt));
+      .orderBy(
+        asc(interviewPrepTopics.orderIndex),
+        asc(interviewPrepTopics.createdAt),
+      );
   }
 
   async findOneTopic(topicId: string) {
@@ -141,7 +144,10 @@ export class InterviewPrepService {
       .select()
       .from(interviewPrepSubtopics)
       .where(eq(interviewPrepSubtopics.topicId, topicId))
-      .orderBy(asc(interviewPrepSubtopics.orderIndex), asc(interviewPrepSubtopics.createdAt));
+      .orderBy(
+        asc(interviewPrepSubtopics.orderIndex),
+        asc(interviewPrepSubtopics.createdAt),
+      );
   }
 
   async findOneSubtopic(subtopicId: string) {

@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { db } from '../database/db';
 import { users } from '../database/schema/user.schema';
 import { desc, eq } from 'drizzle-orm';
@@ -42,7 +46,10 @@ export class UsersService {
   }
 
   async create(dto: CreateUserDto) {
-    const existing = await db.select().from(users).where(eq(users.email, dto.email));
+    const existing = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, dto.email));
     if (existing.length > 0) {
       throw new ConflictException('Email already registered');
     }
@@ -73,8 +80,12 @@ export class UsersService {
     if (!existing) throw new NotFoundException('User not found');
 
     if (dto.email !== undefined && dto.email !== existing.email) {
-      const byEmail = await db.select().from(users).where(eq(users.email, dto.email));
-      if (byEmail.length > 0) throw new ConflictException('Email already in use');
+      const byEmail = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, dto.email));
+      if (byEmail.length > 0)
+        throw new ConflictException('Email already in use');
     }
 
     const payload: Partial<{
@@ -88,7 +99,8 @@ export class UsersService {
     if (dto.name !== undefined) payload.name = dto.name.trim() || null;
     if (dto.role !== undefined) payload.role = dto.role;
     if (dto.plan !== undefined) payload.plan = dto.plan;
-    if (dto.password !== undefined) payload.password = await bcrypt.hash(dto.password, 10);
+    if (dto.password !== undefined)
+      payload.password = await bcrypt.hash(dto.password, 10);
 
     if (Object.keys(payload).length === 0) {
       return this.findOne(id);

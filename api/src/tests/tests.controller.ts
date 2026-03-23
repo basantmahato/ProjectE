@@ -76,10 +76,7 @@ export class TestsController {
   }
 
   @Delete(':testId/questions/:id')
-  removeQuestion(
-    @Param('testId') testId: string,
-    @Param('id') id: string,
-  ) {
+  removeQuestion(@Param('testId') testId: string, @Param('id') id: string) {
     return this.testQuestionsService.removeFromTest(testId, id);
   }
 

@@ -81,7 +81,13 @@ export class BlogService {
       .limit(limitNum)
       .offset(offset);
 
-    return { data, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) || 1 };
+    return {
+      data,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum) || 1,
+    };
   }
 
   async findOnePostAdmin(id: string) {
@@ -113,7 +119,9 @@ export class BlogService {
         ...(dto.featuredImage != null && { featuredImage: dto.featuredImage }),
         ...(dto.images != null && { images: dto.images }),
         ...(dto.metaTitle != null && { metaTitle: dto.metaTitle }),
-        ...(dto.metaDescription != null && { metaDescription: dto.metaDescription }),
+        ...(dto.metaDescription != null && {
+          metaDescription: dto.metaDescription,
+        }),
         ...(dto.metaKeywords != null && { metaKeywords: dto.metaKeywords }),
         ...(dto.canonicalUrl != null && { canonicalUrl: dto.canonicalUrl }),
         ...(dto.ogTitle != null && { ogTitle: dto.ogTitle }),
@@ -121,7 +129,9 @@ export class BlogService {
         ...(dto.ogImage != null && { ogImage: dto.ogImage }),
         ...(dto.twitterCard != null && { twitterCard: dto.twitterCard }),
         ...(dto.twitterTitle != null && { twitterTitle: dto.twitterTitle }),
-        ...(dto.twitterDescription != null && { twitterDescription: dto.twitterDescription }),
+        ...(dto.twitterDescription != null && {
+          twitterDescription: dto.twitterDescription,
+        }),
         ...(dto.twitterImage != null && { twitterImage: dto.twitterImage }),
         ...(dto.isPublished != null && {
           isPublished: dto.isPublished,
@@ -205,9 +215,7 @@ export class BlogService {
     const [post] = await db
       .select()
       .from(blogPosts)
-      .where(
-        and(eq(blogPosts.slug, slug), eq(blogPosts.isPublished, true)),
-      );
+      .where(and(eq(blogPosts.slug, slug), eq(blogPosts.isPublished, true)));
     if (!post) throw new NotFoundException('Post not found');
     return post;
   }
@@ -216,9 +224,7 @@ export class BlogService {
     const [post] = await db
       .select()
       .from(blogPosts)
-      .where(
-        and(eq(blogPosts.id, id), eq(blogPosts.isPublished, true)),
-      );
+      .where(and(eq(blogPosts.id, id), eq(blogPosts.isPublished, true)));
     if (!post) throw new NotFoundException('Post not found');
     return post;
   }
@@ -241,22 +247,23 @@ export class BlogService {
       .orderBy(asc(blogComments.createdAt));
 
     const commentIds = comments.map((c) => c.id);
-    const replies = commentIds.length > 0
-      ? await db
-          .select({
-            id: blogCommentReplies.id,
-            commentId: blogCommentReplies.commentId,
-            userId: blogCommentReplies.userId,
-            content: blogCommentReplies.content,
-            createdAt: blogCommentReplies.createdAt,
-            userName: users.name,
-            userEmail: users.email,
-          })
-          .from(blogCommentReplies)
-          .leftJoin(users, eq(blogCommentReplies.userId, users.id))
-          .where(inArray(blogCommentReplies.commentId, commentIds))
-          .orderBy(asc(blogCommentReplies.createdAt))
-      : [];
+    const replies =
+      commentIds.length > 0
+        ? await db
+            .select({
+              id: blogCommentReplies.id,
+              commentId: blogCommentReplies.commentId,
+              userId: blogCommentReplies.userId,
+              content: blogCommentReplies.content,
+              createdAt: blogCommentReplies.createdAt,
+              userName: users.name,
+              userEmail: users.email,
+            })
+            .from(blogCommentReplies)
+            .leftJoin(users, eq(blogCommentReplies.userId, users.id))
+            .where(inArray(blogCommentReplies.commentId, commentIds))
+            .orderBy(asc(blogCommentReplies.createdAt))
+        : [];
 
     const replyMap = new Map<string, typeof replies>();
     for (const r of replies) {

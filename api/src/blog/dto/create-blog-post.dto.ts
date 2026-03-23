@@ -1,13 +1,26 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsBoolean, IsOptional, IsString, IsNotEmpty, MinLength } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsOptional,
+  IsString,
+  IsNotEmpty,
+  MinLength,
+} from 'class-validator';
 
 export class CreateBlogPostDto {
-  @ApiPropertyOptional({ description: 'URL-friendly slug (unique). If omitted, derived from title.', example: 'how-to-prepare-for-exams' })
+  @ApiPropertyOptional({
+    description: 'URL-friendly slug (unique). If omitted, derived from title.',
+    example: 'how-to-prepare-for-exams',
+  })
   @IsOptional()
   @IsString()
   slug?: string;
 
-  @ApiProperty({ description: 'Post title', example: 'How to Prepare for Exams' })
+  @ApiProperty({
+    description: 'Post title',
+    example: 'How to Prepare for Exams',
+  })
   @IsString()
   @IsNotEmpty()
   @MinLength(1, { message: 'Title is required' })
@@ -28,7 +41,10 @@ export class CreateBlogPostDto {
   @IsString()
   featuredImage?: string;
 
-  @ApiPropertyOptional({ description: 'List of image URLs in post', type: [String] })
+  @ApiPropertyOptional({
+    description: 'List of image URLs in post',
+    type: [String],
+  })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })

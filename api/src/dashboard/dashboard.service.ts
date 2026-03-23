@@ -42,12 +42,17 @@ export class DashboardService {
       .from(testAttempts)
       .innerJoin(tests, eq(testAttempts.testId, tests.id))
       .where(
-        and(eq(testAttempts.userId, userId), isNotNull(testAttempts.submittedAt))
+        and(
+          eq(testAttempts.userId, userId),
+          isNotNull(testAttempts.submittedAt),
+        ),
       );
 
     const accuracyPercent =
       Number(stats.totalPossible) > 0
-        ? Math.round((Number(stats.totalScore) / Number(stats.totalPossible)) * 100)
+        ? Math.round(
+            (Number(stats.totalScore) / Number(stats.totalPossible)) * 100,
+          )
         : 0;
 
     const mockTestsTaken = Number(stats.mockCount);
@@ -61,7 +66,10 @@ export class DashboardService {
 
   async getAdminStats() {
     const now = Date.now();
-    if (this.adminStatsCache && now - this.adminStatsCache.timestamp < this.CACHE_TTL_MS) {
+    if (
+      this.adminStatsCache &&
+      now - this.adminStatsCache.timestamp < this.CACHE_TTL_MS
+    ) {
       return this.adminStatsCache.data;
     }
 

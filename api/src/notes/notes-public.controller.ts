@@ -27,9 +27,9 @@ export class NotesPublicController {
 
   @Get('subjects/slug/:subjectSlug/topics')
   findTopicsBySubjectSlug(@Param('subjectSlug') subjectSlug: string) {
-    return this.subjectsService.findOneBySlug(subjectSlug).then((subject) =>
-      this.topicsService.findBySubjectId(subject.id),
-    );
+    return this.subjectsService
+      .findOneBySlug(subjectSlug)
+      .then((subject) => this.topicsService.findBySubjectId(subject.id));
   }
 
   @Get('subjects/slug/:subjectSlug/topics/slug/:topicSlug')
@@ -37,7 +37,10 @@ export class NotesPublicController {
     @Param('subjectSlug') subjectSlug: string,
     @Param('topicSlug') topicSlug: string,
   ) {
-    return this.topicsService.findOneBySubjectSlugAndTopicSlug(subjectSlug, topicSlug);
+    return this.topicsService.findOneBySubjectSlugAndTopicSlug(
+      subjectSlug,
+      topicSlug,
+    );
   }
 
   @Get('subjects/slug/:subjectSlug/topics/slug/:topicSlug/notes')

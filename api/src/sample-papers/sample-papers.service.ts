@@ -144,10 +144,7 @@ export class SamplePapersService {
     return s;
   }
 
-  async updateSubject(
-    subjectId: string,
-    dto: UpdateSamplePaperSubjectDto,
-  ) {
+  async updateSubject(subjectId: string, dto: UpdateSamplePaperSubjectDto) {
     const [updated] = await db
       .update(samplePaperSubjects)
       .set({
@@ -241,7 +238,10 @@ export class SamplePapersService {
       .select()
       .from(samplePaperQuestions)
       .where(eq(samplePaperQuestions.samplePaperTopicId, topicId))
-      .orderBy(asc(samplePaperQuestions.orderIndex), asc(samplePaperQuestions.createdAt));
+      .orderBy(
+        asc(samplePaperQuestions.orderIndex),
+        asc(samplePaperQuestions.createdAt),
+      );
   }
 
   async findOneQuestion(questionId: string) {
@@ -253,10 +253,7 @@ export class SamplePapersService {
     return q;
   }
 
-  async updateQuestion(
-    questionId: string,
-    dto: UpdateSamplePaperQuestionDto,
-  ) {
+  async updateQuestion(questionId: string, dto: UpdateSamplePaperQuestionDto) {
     const [updated] = await db
       .update(samplePaperQuestions)
       .set({
@@ -266,7 +263,8 @@ export class SamplePapersService {
       })
       .where(eq(samplePaperQuestions.id, questionId))
       .returning();
-    if (!updated) throw new NotFoundException('Sample paper question not found');
+    if (!updated)
+      throw new NotFoundException('Sample paper question not found');
     return updated;
   }
 
@@ -275,7 +273,8 @@ export class SamplePapersService {
       .delete(samplePaperQuestions)
       .where(eq(samplePaperQuestions.id, questionId))
       .returning();
-    if (!deleted) throw new NotFoundException('Sample paper question not found');
+    if (!deleted)
+      throw new NotFoundException('Sample paper question not found');
     return { message: 'Question deleted successfully' };
   }
 
@@ -309,7 +308,8 @@ export class SamplePapersService {
       .select()
       .from(samplePaperQuestionOptions)
       .where(eq(samplePaperQuestionOptions.id, optionId));
-    if (!o) throw new NotFoundException('Sample paper question option not found');
+    if (!o)
+      throw new NotFoundException('Sample paper question option not found');
     return o;
   }
 
@@ -325,7 +325,8 @@ export class SamplePapersService {
       })
       .where(eq(samplePaperQuestionOptions.id, optionId))
       .returning();
-    if (!updated) throw new NotFoundException('Sample paper question option not found');
+    if (!updated)
+      throw new NotFoundException('Sample paper question option not found');
     return updated;
   }
 
@@ -334,7 +335,8 @@ export class SamplePapersService {
       .delete(samplePaperQuestionOptions)
       .where(eq(samplePaperQuestionOptions.id, optionId))
       .returning();
-    if (!deleted) throw new NotFoundException('Sample paper question option not found');
+    if (!deleted)
+      throw new NotFoundException('Sample paper question option not found');
     return { message: 'Option deleted successfully' };
   }
 
@@ -377,9 +379,13 @@ export class SamplePapersService {
         });
         created.papers += 1;
         for (const subj of paperItem.subjects ?? []) {
-          const subject = await this.createSubject(paper.id, { name: subj.name });
+          const subject = await this.createSubject(paper.id, {
+            name: subj.name,
+          });
           for (const top of subj.topics ?? []) {
-            const topic = await this.createTopic(subject.id, { name: top.name });
+            const topic = await this.createTopic(subject.id, {
+              name: top.name,
+            });
             for (let qIdx = 0; qIdx < (top.questions ?? []).length; qIdx++) {
               const q = top.questions![qIdx];
               const question = await this.createQuestion(topic.id, {
@@ -437,10 +443,13 @@ export class SamplePapersService {
             ),
           );
         const distinctCount = viewsThisMonth.length;
-        const alreadyViewedThisMonth = viewsThisMonth.some((v) => v.samplePaperId === paperId);
+        const alreadyViewedThisMonth = viewsThisMonth.some(
+          (v) => v.samplePaperId === paperId,
+        );
         if (distinctCount >= maxSamplePapers && !alreadyViewedThisMonth) {
           throw new ForbiddenException({
-            message: 'Free plan limited to 10 sample papers per month. Upgrade to Basic for more.',
+            message:
+              'Free plan limited to 10 sample papers per month. Upgrade to Basic for more.',
             code: 'PLAN_UPGRADE_REQUIRED',
           });
         }
@@ -461,10 +470,13 @@ export class SamplePapersService {
           ),
         );
       const distinctCount = viewsThisMonth.length;
-      const alreadyViewedThisMonth = viewsThisMonth.some((v) => v.samplePaperId === paperId);
+      const alreadyViewedThisMonth = viewsThisMonth.some(
+        (v) => v.samplePaperId === paperId,
+      );
       if (distinctCount >= FREE_TIER_SAMPLE_PAPERS && !alreadyViewedThisMonth) {
         throw new ForbiddenException({
-          message: 'Free tier limited to 10 sample papers per month. Sign in or upgrade for more.',
+          message:
+            'Free tier limited to 10 sample papers per month. Sign in or upgrade for more.',
           code: 'PLAN_UPGRADE_REQUIRED',
         });
       }

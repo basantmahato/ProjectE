@@ -26,19 +26,13 @@ export class NotesService {
   }
 
   async findOneNote(id: string) {
-    const [note] = await db
-      .select()
-      .from(notes)
-      .where(eq(notes.id, id));
+    const [note] = await db.select().from(notes).where(eq(notes.id, id));
     if (!note) throw new NotFoundException('Note not found');
     return note;
   }
 
   async findOneNoteBySlug(slug: string) {
-    const [note] = await db
-      .select()
-      .from(notes)
-      .where(eq(notes.slug, slug));
+    const [note] = await db.select().from(notes).where(eq(notes.slug, slug));
     if (!note) throw new NotFoundException('Note not found');
     return note;
   }

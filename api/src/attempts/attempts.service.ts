@@ -74,7 +74,8 @@ export class AttemptsService {
         const count = countResult?.count ?? 0;
         if (count >= maxMock) {
           throw new ForbiddenException({
-            message: 'Free plan limited to 10 mock tests per month. Upgrade to Basic for more.',
+            message:
+              'Free plan limited to 10 mock tests per month. Upgrade to Basic for more.',
             code: 'PLAN_UPGRADE_REQUIRED',
           });
         }
@@ -99,7 +100,8 @@ export class AttemptsService {
         const count = countResult?.count ?? 0;
         if (count >= maxRegular) {
           throw new ForbiddenException({
-            message: 'Free plan limited to 2 tests per day. Upgrade to Basic for more.',
+            message:
+              'Free plan limited to 2 tests per day. Upgrade to Basic for more.',
             code: 'PLAN_UPGRADE_REQUIRED',
           });
         }
@@ -242,7 +244,10 @@ export class AttemptsService {
       .select({ id: answers.id })
       .from(answers)
       .where(
-        and(eq(answers.attemptId, attemptId), eq(answers.questionId, questionId)),
+        and(
+          eq(answers.attemptId, attemptId),
+          eq(answers.questionId, questionId),
+        ),
       );
 
     if (existing.length > 0) {
@@ -369,10 +374,16 @@ export class AttemptsService {
       .from(questionOptions)
       .where(inArray(questionOptions.questionId, questionIds));
 
-    const correctByQuestion = new Map<string | null, { id: string; optionText: string }>();
+    const correctByQuestion = new Map<
+      string | null,
+      { id: string; optionText: string }
+    >();
     for (const opt of allOptions) {
       if (opt.isCorrect) {
-        correctByQuestion.set(opt.questionId, { id: opt.id, optionText: opt.optionText });
+        correctByQuestion.set(opt.questionId, {
+          id: opt.id,
+          optionText: opt.optionText,
+        });
       }
     }
     const selectedByOption = new Map<string, { optionText: string }>();
@@ -384,7 +395,7 @@ export class AttemptsService {
       const q = questionMap[a.questionId];
       const correct = correctByQuestion.get(a.questionId);
       const selectedText = a.selectedOptionId
-        ? selectedByOption.get(a.selectedOptionId)?.optionText ?? null
+        ? (selectedByOption.get(a.selectedOptionId)?.optionText ?? null)
         : null;
       return {
         questionId: a.questionId,

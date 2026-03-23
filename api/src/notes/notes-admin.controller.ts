@@ -24,10 +24,7 @@ export class NotesAdminController {
   constructor(private readonly notesService: NotesService) {}
 
   @Post('topics/:topicId/notes')
-  createNote(
-    @Param('topicId') topicId: string,
-    @Body() dto: CreateNoteDto,
-  ) {
+  createNote(@Param('topicId') topicId: string, @Body() dto: CreateNoteDto) {
     return this.notesService.createNote(topicId, dto);
   }
 
@@ -37,10 +34,7 @@ export class NotesAdminController {
   }
 
   @Patch('notes/:noteId')
-  updateNote(
-    @Param('noteId') noteId: string,
-    @Body() dto: UpdateNoteDto,
-  ) {
+  updateNote(@Param('noteId') noteId: string, @Body() dto: UpdateNoteDto) {
     return this.notesService.updateNote(noteId, dto);
   }
 
